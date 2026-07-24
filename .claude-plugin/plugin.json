@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "agent-tooling",
+  "displayName": "OpenHeritage",
+  "version": "3.1.0",
+  "description": "Discover public genealogy, archive, historical photo, memorial, cemetery, and research records on OpenHeritage.",
+  "author": {
+    "name": "OpenHeritage",
+    "url": "https://openheritage.online/"
+  },
+  "homepage": "https://openheritage.online/en/agents",
+  "repository": "https://github.com/openheritage/agent-tooling",
+  "keywords": [
+    "genealogy",
+    "archives",
+    "historical-photos",
+    "memorials",
+    "cemeteries",
+    "research",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

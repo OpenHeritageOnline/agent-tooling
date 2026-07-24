@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openheritage": {
+      "type": "http",
+      "url": "https://openheritage.online/mcp"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "online.openheritage/public-search",
+  "title": "OpenHeritage Public Search",
+  "description": "Read-only discovery of public genealogy, archive, historical photo, memorial, cemetery, and repository records.",
+  "version": "2.9.3",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://openheritage.online/mcp"
+    }
+  ]
+}

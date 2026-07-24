@@ -1,0 +1,40 @@
+{
+  "name": "agent-tooling",
+  "version": "3.1.0",
+  "description": "Discover public genealogy, archive, historical photo, memorial, cemetery, and research records on OpenHeritage.",
+  "author": {
+    "name": "OpenHeritage",
+    "url": "https://openheritage.online/"
+  },
+  "homepage": "https://openheritage.online/en/agents",
+  "repository": "https://github.com/openheritage/agent-tooling",
+  "keywords": [
+    "genealogy",
+    "archives",
+    "historical-photos",
+    "memorials",
+    "cemeteries",
+    "research",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "OpenHeritage",
+    "shortDescription": "Search public family-history and heritage records",
+    "longDescription": "Use OpenHeritage's public, read-only MCP tools and focused agent skills to discover archival sources, historical photographs, memorials, cemeteries, genealogy researches, and related records.",
+    "developerName": "OpenHeritage",
+    "category": "Research",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://openheritage.online/en/agents",
+    "defaultPrompt": [
+      "Search OpenHeritage for records about my ancestor.",
+      "Find archival sources for a surname and place.",
+      "Look for memorials and historical photos."
+    ],
+    "brandColor": "#6D4C41"
+  },
+  "mcpServers": "./.mcp.json"
+}
