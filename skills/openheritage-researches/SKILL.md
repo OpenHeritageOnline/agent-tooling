@@ -1,7 +1,8 @@
 ---
 name: openheritage-researches
 description: Search and read public OpenHeritage genealogy research projects and their mapped places, and create or manage authorized personal research projects. Use for research questions, hypotheses, places, date ranges, people, DNA evidence, source links, and project visibility.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # OpenHeritage Researches

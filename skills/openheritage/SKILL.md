@@ -1,7 +1,8 @@
 ---
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, collections, researches, or people, and to choose a focused OpenHeritage skill.
-version: 3.1.0
+metadata:
+  version: 3.1.0
 ---
 
 # OpenHeritage

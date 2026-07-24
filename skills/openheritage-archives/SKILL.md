@@ -1,7 +1,8 @@
 ---
 name: openheritage-archives
 description: Search and read OpenHeritage archival sources, documents, files, pages, XML, table entries, repositories, collections, and exports, and perform authorized archival contributions. Use for archive catalogs, record coverage, document browsing, repository holdings, and collection hierarchies.
-version: 1.1.0
+metadata:
+  version: 1.1.0
 ---
 
 # OpenHeritage Archives

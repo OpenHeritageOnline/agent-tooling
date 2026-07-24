@@ -1,7 +1,8 @@
 ---
 name: openheritage-memorials
 description: Search and read OpenHeritage memorials, cemeteries, cemetery photos, maps, nearby records, statistics, public contribution data, exports, and posters, and perform authorized preservation workflows. Use for graves, commemorated people, cemetery discovery, and memorial photo transcription.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # OpenHeritage Memorials and Cemeteries

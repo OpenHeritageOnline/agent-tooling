@@ -1,7 +1,8 @@
 ---
 name: openheritage-photos
 description: Search and read OpenHeritage historical photo assets, image variants, highlights, mapped photos, correction proposals, and people identified on photos, and perform authorized photo preservation workflows. Use for historical photographs and subjects depicted in them.
-version: 1.0.0
+metadata:
+  version: 1.0.0
 ---
 
 # OpenHeritage Photos

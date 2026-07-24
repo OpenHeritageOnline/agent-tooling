@@ -28,6 +28,13 @@ Use the root [`.mcp.json`](.mcp.json) with clients that support project or plugi
 
 ### Claude Code
 
+Add the public OpenHeritage marketplace, then install the complete plugin:
+
+```bash
+claude plugin marketplace add OpenHeritageOnline/agent-tooling
+claude plugin install agent-tooling@openheritage
+```
+
 Connect only the MCP server:
 
 ```bash
@@ -52,6 +59,8 @@ npx skills add OpenHeritageOnline/agent-tooling
 
 The repository also includes a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json). Plugin-aware hosts can load the repository checkout directly and use its bundled `.mcp.json`.
 
+Every Agent Skills-compatible host can also discover the five published skills from the [OpenHeritage Agent Skills index](https://openheritage.online/.well-known/agent-skills/index.json). For an MCP host without plugin support, add the `openheritage` entry from [`.mcp.json`](.mcp.json) to its user or project MCP configuration.
+
 ## Skills
 
 | Skill | Best for |
@@ -69,13 +78,14 @@ The same versioned skill documents are also published from the OpenHeritage webs
 
 ## MCP Registry
 
-[`server.json`](server.json) is ready for publication to the official MCP Registry:
+[`server.json`](server.json) publishes the remote server as `io.github.openheritageonline/public-search` in the official MCP Registry. The GitHub Actions workflow publishes it when an `mcp-v*` tag is pushed:
 
 ```bash
-mcp-publisher publish
+git tag mcp-v2.9.3
+git push origin mcp-v2.9.3
 ```
 
-Publishing requires the repository owner to authenticate and verify ownership of the `openheritage.online` namespace.
+The workflow uses GitHub OIDC, so it requires no stored token or domain-verification private key. Registry versions are immutable: bump `server.json` before creating a later tag.
 
 ## Safety
 

@@ -1,0 +1,38 @@
+{
+  "name": "openheritage",
+  "description": "Public OpenHeritage MCP search and Agent Skills for genealogy and cultural-heritage research.",
+  "owner": {
+    "name": "OpenHeritage",
+    "url": "https://openheritage.online/"
+  },
+  "plugins": [
+    {
+      "name": "agent-tooling",
+      "source": "./",
+      "description": "Search public OpenHeritage genealogy, archive, photo, memorial, cemetery, and research records.",
+      "version": "3.1.0",
+      "author": {
+        "name": "OpenHeritage",
+        "url": "https://openheritage.online/"
+      },
+      "homepage": "https://openheritage.online/en/agents",
+      "repository": "https://github.com/OpenHeritageOnline/agent-tooling",
+      "keywords": [
+        "genealogy",
+        "archives",
+        "historical-photos",
+        "memorials",
+        "cemeteries",
+        "research",
+        "mcp"
+      ],
+      "category": "Research",
+      "tags": [
+        "genealogy",
+        "cultural-heritage",
+        "mcp",
+        "agent-skills"
+      ]
+    }
+  ]
+}
