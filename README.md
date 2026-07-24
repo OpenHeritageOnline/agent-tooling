@@ -35,6 +35,74 @@ The endpoint uses MCP Streamable HTTP and exposes:
 
 Use the root [`.mcp.json`](.mcp.json) with clients that support project or plugin MCP configuration.
 
+## Add OpenHeritage to your agent / Додайте OpenHeritage до свого агента
+
+### English
+
+Use the MCP connection for live, public OpenHeritage search. Add the skills as well when you want your agent to receive focused guidance for memorials, graves, archival documents, historical photos, and genealogy research.
+
+**Codex**
+
+```bash
+codex mcp add openheritage --url https://openheritage.online/mcp
+npx skills add OpenHeritageOnline/agent-tooling
+```
+
+**Gemini CLI**
+
+```bash
+gemini mcp add --scope user --transport http openheritage https://openheritage.online/mcp
+gemini skills install https://github.com/OpenHeritageOnline/agent-tooling
+```
+
+**Claude Code** — install the complete plugin, which includes both the MCP server and skills:
+
+```bash
+claude plugin marketplace add OpenHeritageOnline/agent-tooling
+claude plugin install agent-tooling@openheritage
+```
+
+If you only need live search in Claude Code, use this instead:
+
+```bash
+claude mcp add --transport http --scope user openheritage https://openheritage.online/mcp
+```
+
+Start a new chat after installation. In an open Claude Code session, run `/reload-plugins` after installing the plugin. Do not install both the Claude plugin and its separate MCP entry unless you intentionally want duplicate configuration.
+
+### Українською
+
+Підключіть MCP, щоб агент міг шукати публічні записи OpenHeritage у реальному часі. Додайте також навички, якщо хочете, щоб агент отримав спеціальні інструкції для роботи з меморіалами, могилами, архівними документами, історичними фотографіями та генеалогічними дослідженнями.
+
+**Codex**
+
+```bash
+codex mcp add openheritage --url https://openheritage.online/mcp
+npx skills add OpenHeritageOnline/agent-tooling
+```
+
+**Gemini CLI**
+
+```bash
+gemini mcp add --scope user --transport http openheritage https://openheritage.online/mcp
+gemini skills install https://github.com/OpenHeritageOnline/agent-tooling
+```
+
+**Claude Code** — встановіть повний плагін: він містить і MCP-сервер, і навички.
+
+```bash
+claude plugin marketplace add OpenHeritageOnline/agent-tooling
+claude plugin install agent-tooling@openheritage
+```
+
+Якщо в Claude Code потрібен лише пошук, використайте натомість:
+
+```bash
+claude mcp add --transport http --scope user openheritage https://openheritage.online/mcp
+```
+
+Після встановлення почніть новий чат. Якщо ви встановили плагін у вже відкритій сесії Claude Code, виконайте `/reload-plugins`. Не встановлюйте одночасно плагін Claude та окремий запис MCP, якщо навмисно не хочете дублювати конфігурацію.
+
 ### Claude Code
 
 Add the public OpenHeritage marketplace, then install the complete plugin:
