@@ -47,7 +47,7 @@ The repository includes a Claude Code manifest at [`.claude-plugin/plugin.json`]
 Install the portable skills from GitHub with a compatible Agent Skills installer:
 
 ```bash
-npx skills add openheritage/agent-tooling
+npx skills add OpenHeritageOnline/agent-tooling
 ```
 
 The repository also includes a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json). Plugin-aware hosts can load the repository checkout directly and use its bundled `.mcp.json`.
@@ -88,4 +88,3 @@ Publishing requires the repository owner to authenticate and verify ownership of
 ## Source of truth
 
 The production skill documents are maintained in the main OpenHeritage application repository under `sources/FrontendServer/AgentSkills/`. Keep the copies in `skills/` byte-for-byte synchronized when releasing a new version.
-
