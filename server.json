@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.openheritageonline/public-search",
+  "name": "io.github.OpenHeritageOnline/public-search",
   "title": "OpenHeritage Public Search",
   "description": "Public search of genealogy, archives, photos, memorials, cemeteries, research, and repositories.",
-  "version": "2.9.3",
+  "version": "2.9.4",
   "repository": {
     "url": "https://github.com/OpenHeritageOnline/agent-tooling",
     "source": "github"
