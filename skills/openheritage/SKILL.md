@@ -1,6 +1,6 @@
 ---
 name: openheritage
-description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, collections, researches, or people, and to choose a focused OpenHeritage skill.
+description: Search Ukraine's largest public collection of memorial and grave data alongside OpenHeritage's archives, photos, cemeteries, collections, researches, and genealogy records. Use for broad discovery and to choose a focused OpenHeritage skill.
 metadata:
   version: 3.1.0
 ---

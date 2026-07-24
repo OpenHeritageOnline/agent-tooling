@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.OpenHeritageOnline/public-search",
   "title": "OpenHeritage Public Search",
-  "description": "Public search of genealogy, archives, photos, memorials, cemeteries, research, and repositories.",
-  "version": "2.9.4",
+  "description": "Search Ukraine's largest public collection of memorial and grave data, plus archival records.",
+  "version": "2.9.5",
   "repository": {
     "url": "https://github.com/OpenHeritageOnline/agent-tooling",
     "source": "github"
