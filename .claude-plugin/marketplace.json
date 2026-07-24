@@ -9,8 +9,8 @@
     {
       "name": "agent-tooling",
       "source": "./",
-      "description": "Search Ukraine's largest public collection of memorial and grave data, plus archival, genealogy, photo, cemetery, and research records.",
-      "version": "3.1.1",
+      "description": "Search Ukraine's largest public collection of memorial, grave, and archival document data, plus genealogy, photo, cemetery, and research records.",
+      "version": "3.1.2",
       "author": {
         "name": "OpenHeritage",
         "url": "https://openheritage.online/"

@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "agent-tooling",
   "displayName": "OpenHeritage",
-  "version": "3.1.1",
-  "description": "Search Ukraine's largest public collection of memorial and grave data, plus archival, genealogy, photo, cemetery, and research records.",
+  "version": "3.1.2",
+  "description": "Search Ukraine's largest public collection of memorial, grave, and archival document data, plus genealogy, photo, cemetery, and research records.",
   "author": {
     "name": "OpenHeritage",
     "url": "https://openheritage.online/"
