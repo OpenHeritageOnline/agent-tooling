@@ -2,7 +2,7 @@
 name: openheritage
 description: Search Ukraine's largest public collection of memorial, grave, and archival document data alongside OpenHeritage's photos, cemeteries, collections, researches, and genealogy records. Use for broad discovery and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.1.1
+  version: 3.1.2
 ---
 
 # OpenHeritage
@@ -11,14 +11,14 @@ Use this umbrella skill for cross-domain discovery. Switch to the focused skill 
 
 | Skill | Use for |
 |---|---|
-| openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, exports |
+| openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, OCR, parsing, exports |
 | openheritage-photos | Historical photos, media variants, photo maps, corrections, people on photos |
 | openheritage-memorials | Memorials, cemeteries, cemetery photos, statistics, maps, exports, contributions |
 | openheritage-researches | Public and owned research projects and their mapped places |
 
 ## Ukraine-focused coverage
 
-OpenHeritage brings together Ukraine's largest public collection of memorial, grave, and archival document data. For memorial and cemetery research, use the focused skill to find graves, cemetery records, photographs, maps, and transcriptions. For archival research, use the archives skill to find repositories, sources, digitized documents, page images, XML, transcriptions, and indexed entries with their provenance.
+OpenHeritage brings together Ukraine's largest public collection of memorial, grave, and archival document data. For memorial and cemetery research, use the focused skill to find graves, cemetery records, photographs, maps, and transcriptions. For archival research, use the archives skill to find repositories and sources, retrieve selected documents by page or original file, and use existing text, parsing, or OCR to answer questions with page- or file-level provenance.
 
 ## Safety and setup
 

@@ -14,7 +14,7 @@ No API key is required for public search.
 ## Ukrainian heritage data at scale
 
 - **Memorials and graves:** discover memorial profiles, grave sites, cemetery records, cemetery photographs, map locations, and transcriptions.
-- **Archival documents:** search repositories, sources, digitized documents, page images, XML, transcriptions, and indexed entries with their provenance.
+- **Archival documents:** search repositories and sources, retrieve digitized documents by page or original file, and use XML, transcriptions, parsing, or OCR to answer questions with provenance.
 
 These records are connected through canonical OpenHeritage pages, so agents can move from a discovery lead to the relevant cemetery, memorial, source, or document without treating search results as proof.
 
@@ -143,7 +143,7 @@ Every Agent Skills-compatible host can also discover the five published skills f
 | Skill | Best for |
 |---|---|
 | `openheritage` | Broad searches across all public OpenHeritage domains |
-| `openheritage-archives` | Sources, documents, repositories, collections, files, pages, entries, and exports |
+| `openheritage-archives` | Sources, documents, repositories, collections, page and file retrieval, OCR, parsing, entries, and exports |
 | `openheritage-photos` | Historical photos, media variants, photo maps, corrections, and people on photos |
 | `openheritage-memorials` | Memorials, cemeteries, cemetery photos, maps, statistics, and exports |
 | `openheritage-researches` | Public genealogy research projects, questions, hypotheses, places, and evidence |

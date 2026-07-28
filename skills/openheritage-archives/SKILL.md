@@ -1,8 +1,8 @@
 ---
 name: openheritage-archives
-description: Search and read OpenHeritage archival sources, documents, files, pages, XML, table entries, repositories, collections, and exports, and perform authorized archival contributions. Use for archive catalogs, record coverage, document browsing, repository holdings, and collection hierarchies.
+description: Search, retrieve, and research OpenHeritage archival sources, documents, original files, pages, images, XML, table entries, repositories, collections, and exports, including OCR and content parsing to answer user questions, and perform authorized archival contributions. Use for archive catalogs, record coverage, document browsing and analysis, repository holdings, and collection hierarchies.
 metadata:
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # OpenHeritage Archives
@@ -145,6 +145,21 @@ curl -sS --get "$DOC/entries" \
 ~~~
 
 The path form /pages/{pageKey}/xml/{versionId} is authenticated; do not present it as an anonymous endpoint.
+
+## Research document contents
+
+A request to inspect, transcribe, parse, summarize, or answer a question about a named or selected document authorizes retrieval of the accessible pages or original files needed for that answer. Keep retrieval proportional to the question; do not download unrelated pages or treat the request as permission to crawl the document.
+
+Choose the best available representation:
+
+1. Inspect the document metadata and `/pages` list. Preserve the source ID, document ID, asset ID or page key, and displayed page number throughout the analysis.
+2. For page-backed documents, start with existing structured content: `/entries`, page XML, and any transcription in the page metadata. Fetch a page preview or display image when visual confirmation is useful; use the original `/image` only when the derivative is missing or too low-quality for accurate reading.
+3. Use an original file when the document has no page records, its embedded text or structure is better suited to the question, or the user asks for whole-file analysis. Select the relevant asset from the document metadata, use HEAD to check its media type and size, then download it through `/files/{assetId}`. Use a Range request only for format inspection or a genuinely partial read, not as a substitute for a complete file that must be parsed.
+4. Parse text-bearing PDF, XML, JSON, CSV, spreadsheet, or word-processing files with an appropriate local parser. For PDFs, inspect embedded text first and render or OCR only the scanned pages that need it. OCR page images or image-only files when no reliable text or transcription exists.
+5. Search or filter the extracted content for the user's names, places, dates, events, or fields. Read enough surrounding content to interpret a hit correctly, and compare it with the image when layout, handwriting, ditto marks, columns, or OCR ambiguity could change the meaning.
+6. Answer from the retrieved evidence. Identify the source and document and cite the page number plus page key, or the original filename plus asset ID. Distinguish verbatim document text, existing transcription or XML, agent-produced OCR, normalized spelling or dates, and inference. State uncertainty and include plausible alternatives for unclear handwriting; never silently turn OCR output into authoritative transcription.
+
+Reuse downloaded material during the task and remove temporary copies when they are no longer needed. Do not publish or reproduce an entire copyrighted document when a focused excerpt or summary answers the question.
 
 ## Repositories
 
