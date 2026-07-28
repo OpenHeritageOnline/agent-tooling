@@ -164,6 +164,13 @@ git push origin mcp-v2.9.6
 
 The workflow uses GitHub OIDC, so it requires no stored token or domain-verification private key. Registry versions are immutable: bump `server.json` before creating a later tag.
 
+Publishing is restricted to protected release refs and the
+`mcp-registry-production` GitHub Environment. The publisher is downloaded from
+an exact release, verified by SHA256 and Sigstore identity, and checked for the
+expected version and source commit before the OIDC-capable job can run. See the
+[required repository controls](.github/MCP_PUBLISHING_SECURITY.md) before
+creating a release tag.
+
 ## Safety
 
 - Treat search results as discovery leads, not proof of identity or family relationship.

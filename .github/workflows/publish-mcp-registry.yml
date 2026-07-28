@@ -6,22 +6,201 @@ on:
       - "mcp-v*"
   workflow_dispatch:
 
-permissions:
-  contents: read
-  id-token: write
+# The publish job is the only job allowed to mint an OIDC token.
+permissions: {}
+
+concurrency:
+  group: mcp-registry-publish
+  cancel-in-progress: false
+
+env:
+  MCP_PUBLISHER_VERSION: "1.7.9"
+  MCP_PUBLISHER_RELEASE_COMMIT: "35b20719ee7714ad18d0f81af6798ac0a46e2b9b"
+  MCP_PUBLISHER_ASSET: "mcp-publisher_linux_amd64.tar.gz"
+  MCP_PUBLISHER_ASSET_SHA256: "ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac"
+  MCP_PUBLISHER_BUNDLE_SHA256: "c05c72c13231c93ae30c837fe9cf286304c6a7cd1e8d6a750ecb813a6a699ddc"
+  MCP_PUBLISHER_BINARY_SHA256: "7bd7d299443787696bdbe34f10b09757d01766db2b5ce1970d604265029f42a2"
+  MCP_PUBLISHER_SIGSTORE_IDENTITY: "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/v1.7.9"
+  MCP_PUBLISHER_SIGSTORE_ISSUER: "https://token.actions.githubusercontent.com"
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
+  prepare_publisher:
+    name: Verify release source and publisher
+    if: >-
+      github.repository == 'OpenHeritageOnline/agent-tooling' &&
+      github.ref_protected == true &&
+      (
+        (github.event_name == 'push' &&
+          github.ref_type == 'tag' &&
+          startsWith(github.ref_name, 'mcp-v')) ||
+        (github.event_name == 'workflow_dispatch' &&
+          github.ref == 'refs/heads/main')
+      )
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
 
-      - name: Install MCP Registry publisher
+    steps:
+      - name: Check out the protected release ref
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release ref and server metadata
+        shell: bash
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          set -euo pipefail
+
+          version="$(jq -er '.version | select(type == "string")' server.json)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::server.json contains an invalid version: $version"
+            exit 1
+          fi
+
+          jq -e '
+            .name == "io.github.OpenHeritageOnline/public-search" and
+            .repository.url == "https://github.com/OpenHeritageOnline/agent-tooling" and
+            .repository.source == "github"
+          ' server.json >/dev/null
+
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            expected_tag="mcp-v${version}"
+            if [[ "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+              echo "::error::Expected protected tag $expected_tag, got $GITHUB_REF_NAME"
+              exit 1
+            fi
+
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+              echo "::error::Release commit must be reachable from protected branch main"
+              exit 1
+            fi
+          fi
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: "v3.0.6"
+
+      - name: Download and verify immutable MCP publisher
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          release_url="https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}"
+          bundle="${MCP_PUBLISHER_ASSET}.sigstore.json"
+
+          curl \
+            --fail-with-body \
+            --location \
+            --proto '=https' \
+            --proto-redir '=https' \
+            --retry 5 \
+            --retry-all-errors \
+            --show-error \
+            --silent \
+            "${release_url}/${MCP_PUBLISHER_ASSET}" \
+            --output "$MCP_PUBLISHER_ASSET"
+          curl \
+            --fail-with-body \
+            --location \
+            --proto '=https' \
+            --proto-redir '=https' \
+            --retry 5 \
+            --retry-all-errors \
+            --show-error \
+            --silent \
+            "${release_url}/${bundle}" \
+            --output "$bundle"
+
+          printf '%s  %s\n' \
+            "$MCP_PUBLISHER_ASSET_SHA256" \
+            "$MCP_PUBLISHER_ASSET" |
+            sha256sum --check --strict
+          printf '%s  %s\n' \
+            "$MCP_PUBLISHER_BUNDLE_SHA256" \
+            "$bundle" |
+            sha256sum --check --strict
+
+          cosign verify-blob \
+            --bundle "$bundle" \
+            --certificate-identity "$MCP_PUBLISHER_SIGSTORE_IDENTITY" \
+            --certificate-oidc-issuer "$MCP_PUBLISHER_SIGSTORE_ISSUER" \
+            "$MCP_PUBLISHER_ASSET"
+
+          mkdir verified-publisher
+          tar \
+            --extract \
+            --gzip \
+            --file "$MCP_PUBLISHER_ASSET" \
+            --directory verified-publisher \
+            --no-same-owner \
+            --no-same-permissions \
+            mcp-publisher
+          chmod 0755 verified-publisher/mcp-publisher
+
+          printf '%s  %s\n' \
+            "$MCP_PUBLISHER_BINARY_SHA256" \
+            verified-publisher/mcp-publisher |
+            sha256sum --check --strict
+
+          version_output="$(verified-publisher/mcp-publisher --version 2>&1)"
+          printf '%s\n' "$version_output"
+          grep --fixed-strings \
+            "mcp-publisher ${MCP_PUBLISHER_VERSION} (commit: ${MCP_PUBLISHER_RELEASE_COMMIT}," \
+            <<<"$version_output"
+
+      - name: Upload verified publisher for the gated job
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: mcp-publisher-v1.7.9-linux-amd64
+          path: verified-publisher/mcp-publisher
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish from protected ref
+    needs: prepare_publisher
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: mcp-registry-production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out the protected release ref
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Download verified publisher
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: mcp-publisher-v1.7.9-linux-amd64
+          path: .verified-publisher
+
+      - name: Re-verify publisher after artifact transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          printf '%s  %s\n' \
+            "$MCP_PUBLISHER_BINARY_SHA256" \
+            .verified-publisher/mcp-publisher |
+            sha256sum --check --strict
+          chmod 0755 .verified-publisher/mcp-publisher
+
+          version_output="$(.verified-publisher/mcp-publisher --version 2>&1)"
+          printf '%s\n' "$version_output"
+          grep --fixed-strings \
+            "mcp-publisher ${MCP_PUBLISHER_VERSION} (commit: ${MCP_PUBLISHER_RELEASE_COMMIT}," \
+            <<<"$version_output"
 
       - name: Authenticate with GitHub OIDC
-        run: ./mcp-publisher login github-oidc
+        run: .verified-publisher/mcp-publisher login github-oidc
 
       - name: Publish server metadata
-        run: ./mcp-publisher publish
+        run: .verified-publisher/mcp-publisher publish
