@@ -1,8 +1,8 @@
 ---
 name: openheritage
-description: Search Ukraine's largest public collection of memorial, grave, and archival document data alongside OpenHeritage's photos, cemeteries, collections, researches, and genealogy records. Use for broad discovery and to choose a focused OpenHeritage skill.
+description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.1.2
+  version: 3.2.0
 ---
 
 # OpenHeritage
@@ -11,14 +11,10 @@ Use this umbrella skill for cross-domain discovery. Switch to the focused skill 
 
 | Skill | Use for |
 |---|---|
-| openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, OCR, parsing, exports |
+| openheritage-archives | Sources, documents, repositories, collections, newspaper imports, files, pages, XML, entries, exports |
 | openheritage-photos | Historical photos, media variants, photo maps, corrections, people on photos |
 | openheritage-memorials | Memorials, cemeteries, cemetery photos, statistics, maps, exports, contributions |
 | openheritage-researches | Public and owned research projects and their mapped places |
-
-## Ukraine-focused coverage
-
-OpenHeritage brings together Ukraine's largest public collection of memorial, grave, and archival document data. For memorial and cemetery research, use the focused skill to find graves, cemetery records, photographs, maps, and transcriptions. For archival research, use the archives skill to find repositories and sources, retrieve selected documents by page or original file, and use existing text, parsing, or OCR to answer questions with page- or file-level provenance.
 
 ## Safety and setup
 
@@ -34,13 +30,48 @@ BASE="\${OPENHERITAGE_BASE_URL:-https://openheritage.online}"
 COOKIE_JAR="\${OPENHERITAGE_COOKIE_JAR:-openheritage-cookies.txt}"
 ~~~
 
+## Personal API
+
+Use the Personal API for user-authorized contributions. Its interactive
+documentation is at `https://openheritage.online/api-docs`, and the OpenAPI 3
+document is at `https://openheritage.online/api/openapi/v1.json`. Read the live
+operation schema, `x-api-required-scopes`, and multipart field names before a
+mutation instead of guessing a request shape.
+
+Personal API tokens are bearer tokens and always include `api:read`. Add only
+the write scopes needed for the requested work. Newspaper issue import needs
+`api:authors` to create or update the canonical newspaper authority and
+`api:sources` to create Sources, configure collections, and upload clipping
+photo assets. Never send a personal token to MCP: MCP is anonymous and
+read-only.
+
+~~~bash
+curl -sS -H "Authorization: Bearer $OPENHERITAGE_API_TOKEN" \
+  "$BASE/api/authors?query=Newspaper%20name" | jq .
+~~~
+
+Do not print, persist, or pass the token in a URL. A 401 means the bearer token
+is missing or invalid; a 403 means it lacks the operation's required scope or
+the caller lacks record-level authority.
+
 ## MCP public search
 
 For read-only public record discovery, prefer the MCP Streamable HTTP server at
 `https://openheritage.online/mcp`. It provides `search_records`,
 `search_memorials`, `search_cemeteries`, `search_sources`, `search_documents`,
-and `search_repositories`. Use the REST routes below for record details,
-files, authenticated visibility, or mutations.
+`search_repositories`, and `search_places`. Canonical places are searched through
+`search_places` rather than the federated `search_records` index. It accepts a
+required text query plus optional latitude, longitude, radiusKm, typeCode, and
+hasCoordinates filters.
+It also provides `search_authors` and `search_collections`; all MCP tools and
+resources are anonymous and read-only. The source-classification resource mirrors
+`/api/tags?entityType=source`.
+
+After selecting a place, use `resources/templates/list` and `resources/read` for
+canonical place details, children, revisions and revision comparisons, external
+identity matches, and the active place-type catalog. Place resource URIs mirror
+`/api/canonical-places` and `/api/place-types`. Use the REST routes below for
+other record details, files, authenticated visibility, or mutations.
 
 Public JSON reads use:
 
@@ -60,7 +91,7 @@ GET /api/search is anonymous federated lexical or hybrid search.
 | Parameter | Rules |
 |---|---|
 | q | Required non-empty query |
-| entityTypes | Repeatable filter: source, document, entry, memorial-person, memorial-placeholder, cemetery, research, collection, person, photo-asset |
+| entityTypes | Repeatable filter: source, document, entry, memorial-person, memorial-placeholder, cemetery, research, collection, person, photo-asset, author |
 | documentId, sourceId | Optional string IDs narrowing document-related hits |
 | page | One-based; values below 1 become 1 |
 | pageSize | Clamped to 1-100 |
@@ -93,9 +124,11 @@ https://openheritage.online/{locale}/u/{publicId}/{usernameSlug}
 
 Use an already-known canonical slug when available; do not query profile data to discover one. Supported locale values are uk, pl, en, pt, he, and de. If no publicId or existing profile URL is available, point the user to https://openheritage.online/{locale}/search so they can find the page themselves.
 
-## Optional authentication
+## Optional browser-session authentication
 
-Password login issues an HTTP-only auth_token cookie. Set useJwt to false:
+Use a personal API token for operations exposed by the OpenAPI document. For a
+workflow that specifically requires a browser-compatible session, password
+login issues an HTTP-only auth_token cookie. Set useJwt to false:
 
 ~~~bash
 curl -sS -c "$COOKIE_JAR" -X POST "$BASE/api/users/login-password" \

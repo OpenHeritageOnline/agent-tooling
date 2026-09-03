@@ -1,13 +1,17 @@
 ---
 name: openheritage-archives
-description: Search, retrieve, and research OpenHeritage archival sources, documents, original files, pages, images, XML, table entries, repositories, collections, and exports, including OCR and content parsing to answer user questions, and perform authorized archival contributions. Use for archive catalogs, record coverage, document browsing and analysis, repository holdings, and collection hierarchies.
+description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports, and perform authorized contributions including classified newspaper issue and clipping imports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, collection hierarchies, and newspaper imports.
 metadata:
-  version: 1.2.0
+  version: 1.2.1
 ---
 
-# OpenHeritage Archives
+# OpenHeritage Sources and Documents
 
-Use the public REST API to discover archival provenance and document content.
+Use the public REST API to discover provenance and document content. An
+OpenHeritage source is a general provenance entity: it may represent material
+from an archive, museum, library, publication, personal collection, website, or
+another provider. Do not assume a source or repository is archival; inspect its
+type and metadata.
 
 ## Safety and setup
 
@@ -17,6 +21,8 @@ Use the public REST API to discover archival provenance and document content.
 - Never delete, reassign, reject, unlink, or abort without explicit intent.
 - Only an upload-session owner may inspect, complete, or abort that session.
 - Never use /api/admin/* or internal assistant tools.
+- For Personal API mutations, follow the live OpenAPI operation and send the
+  personal token only in the Authorization bearer header.
 
 ~~~bash
 BASE="\${OPENHERITAGE_BASE_URL:-https://openheritage.online}"
@@ -26,9 +32,17 @@ COOKIE_JAR="\${OPENHERITAGE_COOKIE_JAR:-openheritage-cookies.txt}"
 ## MCP public search
 
 For public discovery, prefer `https://openheritage.online/mcp` and its
-`search_sources`, `search_documents`, and `search_repositories` tools. Keep
-using the REST routes below for record detail, pages, files, exports, and all
-authenticated contribution workflows.
+`search_sources`, `search_documents`, and `search_repositories` tools. After a
+tool returns an identifier, use `resources/templates/list` and `resources/read`
+for public sources, repositories, collections, documents, current pages, XML,
+page images, previews, display images, and document files. Resource URIs mirror
+the REST URLs below.
+
+MCP resource reads are anonymous, expose current representations only, and
+inline at most 10 MiB of binary content by default. If a resource exceeds the
+limit, follow the public REST URL from the MCP error and use HTTP Range where
+the endpoint supports it. Keep REST for discovery filters, entries, exports,
+authenticated visibility, historical versions, and contribution workflows.
 
 Use --get and --data-urlencode for JSON discovery. Add -b "$COOKIE_JAR" only for caller-aware visibility. Send binary responses to files rather than jq.
 
@@ -36,9 +50,120 @@ Use --get and --data-urlencode for JSON discovery. Add -b "$COOKIE_JAR" only for
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /api/sources | query, limit; add skip for paged mode; type, approvalStatus, repositoryId, visibility, hasDocuments, sortBy, sortDesc | SourceDto[] without skip; SourcePagedResponseDto with skip. Paged limit is 1-1000; legacy results are capped at 50 |
+| /api/sources | query, limit; add skip for paged mode; type, approvalStatus, repositoryId, repeated authorId, visibility, hasDocuments, sortBy, sortDesc | SourceDto[] without skip; SourcePagedResponseDto with skip. Paged limit is 1-1000; legacy results are capped at 50 |
 | /api/sources/repository-links | referenceCode, url, repeated repositoryId, referenceType, limit | SourceRepositoryLinkLookupDto[] or 422 |
 | /api/sources/{id} | Source GUID | SourceDto or 404/visibility error |
+
+Author authority records are separate from holding repositories. Discover them with `/api/authors?query=...`, read `/api/authors/{id}`, and use one or more returned UUIDs as repeated `authorId` filters. Repeated authors use OR semantics and combine with every other source filter.
+
+### Personal API newspaper issue import
+
+Use the interactive API reference at `$BASE/api-docs` and its OpenAPI document
+at `$BASE/api/openapi/v1.json`. Personal API tokens are bearer tokens and always
+include `api:read`. This workflow needs `api:authors` to create or update author
+authorities and `api:sources` to create Sources, configure collections, and
+upload clipping photo assets. MCP remains anonymous and read-only; never send a
+personal token to it.
+
+1. Discover the Source taxonomy with `GET /api/tags?entityType=source` or the
+   read-only MCP `source-classification-tags` resource. Walk the returned
+   `children` tree and locate the stable code `record-kind-newspaper`. Retain
+   its environment-specific `id`; never hard-code an ID from another
+   environment. `localizedNames` are display labels, while `isFacetRoot` marks
+   a grouping node that cannot be assigned. Newly assigned tags must be active,
+   selectable, applicable to `source`, and not facet roots. When editing a
+   classified Source, first read it and repeat every current assignment as an
+   `assignedTagId` query parameter so retired assignments and their ancestry
+   remain visible.
+
+   ~~~bash
+   curl -sS --get "$BASE/api/tags" \
+     --data-urlencode "entityType=source" |
+     jq '.. | objects | select(.code? == "record-kind-newspaper") |
+         {id, code, localizedNames, applicableEntityTypes,
+          isFacetRoot, isSelectable, isActive}'
+
+   # Repeat assignedTagId once for each classification already on the Source.
+   curl -sS --get "$BASE/api/tags" \
+     --data-urlencode "entityType=source" \
+     --data-urlencode "assignedTagId=$CURRENT_TAG_ID" | jq .
+   ~~~
+
+2. Search `GET /api/authors?query=...&kind=organization` and compare canonical
+   preferred names and aliases. Reuse the canonical newspaper authority when
+   one exists. Only otherwise create an organization with `POST /api/authors`
+   and a token containing `api:authors`. Fetch the current authority and include
+   `currentVersion` before `PUT /api/authors/{id}`.
+
+   ~~~bash
+   curl -sS --get "$BASE/api/authors" \
+     --data-urlencode "query=Назва газети" \
+     --data-urlencode "kind=organization" | jq .
+   ~~~
+
+   A minimal create body has this shape:
+
+   ~~~json
+   {
+     "kind": "organization",
+     "preferredNames": [{ "language": "uk", "value": "Назва газети" }],
+     "aliases": [],
+     "biography": {},
+     "links": []
+   }
+   ~~~
+
+3. Create one Source per issue with `POST /api/sources` and a token containing
+   `api:sources`:
+
+   ~~~json
+   {
+     "type": "publication",
+     "title": "Назва газети — 1932-05-17 — № 42",
+     "originDate": { "type": "exact", "value": "1932-05-17" },
+     "classificationTagIds": ["resolved-record-kind-newspaper-id"],
+     "authorCredits": [{
+       "authorId": "canonical-newspaper-author-id",
+       "roles": ["institutional-creator"],
+       "creditedAs": "Назва газети"
+     }]
+   }
+   ~~~
+
+   Put the exact publication date in ISO order before the printed issue number,
+   for example `Назва газети — 1932-05-17 — № 42`. Within a newspaper, ascending
+   title order then follows publication order without exposing machine-oriented
+   zero padding. Preserve combined issue numbers as printed, such as `№ 42–43`.
+
+   `publication` is the broad Source type and `record-kind-newspaper` is the
+   precise classification. Compatible tags from other Source taxonomy facets
+   may additionally describe an event, religion, or another dimension. Known
+   Source types are `book`, `publication`, `collection`, and `other`; custom
+   types must be lowercase hyphenated slugs, and repository-reserved types are
+   rejected. Date-expression types are `exact`, `approximate`, `before`,
+   `after`, and `range`.
+
+   On create, an omitted or empty `classificationTagIds` assigns no tags. On
+   update, omission preserves all assignments, `[]` clears them, and a
+   non-empty array replaces the complete set. The limit is 32 distinct IDs.
+   Fetch the current Source and preserve its version and unrelated fields
+   before `PUT /api/sources/{id}`.
+
+4. Optionally create or update the automated collection described below to
+   group issues, then verify the generated children and memberships.
+
+5. Upload each clipping with `POST /api/photo-assets` as multipart data using
+   the token scope required by this newspaper workflow. Include the issue
+   Source UUID in the case-sensitive `SourceId` form field and follow the live
+   OpenAPI schema for the remaining metadata and rights fields.
+
+   ~~~bash
+   curl -sS -X POST "$BASE/api/photo-assets" \
+     -H "Authorization: Bearer $OPENHERITAGE_API_TOKEN" \
+     -F "file=@$CLIPPING_FILE" \
+     -F "Title=$CLIPPING_TITLE" \
+     -F "SourceId=$SOURCE_ID" | jq .
+   ~~~
 
 ~~~bash
 curl -sS --get "$BASE/api/sources" \
@@ -146,21 +271,6 @@ curl -sS --get "$DOC/entries" \
 
 The path form /pages/{pageKey}/xml/{versionId} is authenticated; do not present it as an anonymous endpoint.
 
-## Research document contents
-
-A request to inspect, transcribe, parse, summarize, or answer a question about a named or selected document authorizes retrieval of the accessible pages or original files needed for that answer. Keep retrieval proportional to the question; do not download unrelated pages or treat the request as permission to crawl the document.
-
-Choose the best available representation:
-
-1. Inspect the document metadata and `/pages` list. Preserve the source ID, document ID, asset ID or page key, and displayed page number throughout the analysis.
-2. For page-backed documents, start with existing structured content: `/entries`, page XML, and any transcription in the page metadata. Fetch a page preview or display image when visual confirmation is useful; use the original `/image` only when the derivative is missing or too low-quality for accurate reading.
-3. Use an original file when the document has no page records, its embedded text or structure is better suited to the question, or the user asks for whole-file analysis. Select the relevant asset from the document metadata, use HEAD to check its media type and size, then download it through `/files/{assetId}`. Use a Range request only for format inspection or a genuinely partial read, not as a substitute for a complete file that must be parsed.
-4. Parse text-bearing PDF, XML, JSON, CSV, spreadsheet, or word-processing files with an appropriate local parser. For PDFs, inspect embedded text first and render or OCR only the scanned pages that need it. OCR page images or image-only files when no reliable text or transcription exists.
-5. Search or filter the extracted content for the user's names, places, dates, events, or fields. Read enough surrounding content to interpret a hit correctly, and compare it with the image when layout, handwriting, ditto marks, columns, or OCR ambiguity could change the meaning.
-6. Answer from the retrieved evidence. Identify the source and document and cite the page number plus page key, or the original filename plus asset ID. Distinguish verbatim document text, existing transcription or XML, agent-produced OCR, normalized spelling or dates, and inference. State uncertainty and include plausible alternatives for unclear handwriting; never silently turn OCR output into authoritative transcription.
-
-Reuse downloaded material during the task and remove temporary copies when they are no longer needed. Do not publish or reproduce an entire copyrighted document when a focused excerpt or summary answers the question.
-
 ## Repositories
 
 | Anonymous GET | Parameters | Response |
@@ -203,6 +313,56 @@ curl -sS --get "$BASE/api/collections/$COLLECTION_ID/children" \
   --data-urlencode "pageSize=25" | jq .
 ~~~
 
+### Automated newspaper collections
+
+Create with `POST /api/collections`; update with
+`PUT /api/collections/{id}` after fetching the current collection and version.
+Use the structured `automation` object. Its `criteria` may contain
+`sourceAuthor` and `repositoryReferenceRegex`, combined by
+`criteriaMatchMode: "all"` or `"any"`. Use `dateHierarchy` to group matching
+issues into year children:
+
+~~~json
+{
+  "title": { "uk": "Випуски газети" },
+  "visibility": "public",
+  "automation": {
+    "isActive": true,
+    "criteriaMatchMode": "all",
+    "criteria": [{
+      "kind": "sourceAuthor",
+      "authorId": "canonical-newspaper-author-id"
+    }],
+    "grouping": {
+      "kind": "dateHierarchy",
+      "dateSource": "originDate",
+      "granularity": "year",
+      "nonExactBucket": {
+        "key": "not-exact-year",
+        "title": {
+          "uk": "Неточний або невідомий рік",
+          "en": "Non-exact or unknown year"
+        }
+      }
+    }
+  }
+}
+~~~
+
+For `dateSource: "originDate"`, only exact `yyyy`, `yyyy-MM`, or `yyyy-MM-dd`
+values qualify for a year child. For `dateSource: "coverage"`, every coverage
+window must be exact and all windows must fall within one year. Approximate,
+before, after, range, missing, cross-year, or otherwise ineligible dates go to
+the required localized `nonExactBucket`. The currently supported granularity is
+`year`.
+
+Add a `repositoryReferenceRegex` criterion only when issue membership must also
+match a specific repository reference. Give it `repositoryId` and
+`referenceCodePattern`; use capture mappings and `capturedHierarchy` only when
+the desired grouping is based on regex captures instead of issue dates.
+Existing flattened repository automation fields remain accepted for
+compatibility but are deprecated; do not use them for new rules.
+
 ## Rate limits and request pacing
 
 - Keep one archive request in flight. Fetch pages, entries, files, and exports sequentially; never crawl or prefetch an entire repository, collection, or document.
@@ -213,7 +373,14 @@ curl -sS --get "$BASE/api/collections/$COLLECTION_ID/children" \
 
 ## Authenticated contributions
 
-Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POST JSON fields username, password, and useJwt=false to /api/users/login-password, save the response cookie, reuse it with the cookie jar, and verify GET /api/users/me before mutation.
+Prefer a personal API token for operations published in
+`$BASE/api/openapi/v1.json`. Send it as `Authorization: Bearer
+$OPENHERITAGE_API_TOKEN`, never in the URL, and verify each operation's
+`x-api-required-scopes`. For a protected workflow that specifically requires a
+browser-compatible session, set OPENHERITAGE_USERNAME and
+OPENHERITAGE_PASSWORD, POST JSON fields username, password, and useJwt=false to
+/api/users/login-password, save the response cookie, reuse it with the cookie
+jar, and verify GET /api/users/me before mutation.
 
 - Sources: POST /api/sources; PUT or DELETE /api/sources/{id}. Approval/rejection requires moderator access.
 - Documents: POST under a source; PATCH or DELETE a document; add/remove original files; report documents.

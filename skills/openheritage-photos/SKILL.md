@@ -26,13 +26,13 @@ COOKIE_JAR="\${OPENHERITAGE_COOKIE_JAR:-openheritage-cookies.txt}"
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /api/photo-assets | view, sort, period, location, repeated tagIds, text, sourceId, pageToken, pageSize 1-100 | PhotoAssetListResponseDto with opaque nextPageToken |
+| /api/photo-assets | view, sort, period, location, repeated tagIds, repeated authorId, text, sourceId, pageToken, pageSize 1-100 | PhotoAssetListResponseDto with opaque nextPageToken |
 | /api/photo-assets/{id} | Photo GUID | PhotoAssetDto or 404 |
 | /api/photo-assets/timeline-date-range | None | TimelineDateRangeDto |
 | /api/photo-assets/highlights | limit clamped to 1-50 | PhotoAssetHighlightsResponseDto |
 | /api/photo-assets/{id}/correction-proposals | Photo GUID | CorrectionProposalDto[] |
 
-Pass nextPageToken unchanged to retrieve the next page. Use view=timeline to exclude undated photos. text performs text search; sourceId narrows to approved photos attached to a source.
+Pass nextPageToken unchanged to retrieve the next page. Use view=timeline to exclude undated photos. text performs text search; sourceId narrows to approved photos attached to a source. Repeated authorId values use OR semantics and combine with the other filters.
 
 ~~~bash
 curl -sS --get "$BASE/api/photo-assets" \
@@ -112,9 +112,19 @@ curl -sS --get "$BASE/api/photo-asset-resources/persons-on-photo/$PERSON_ON_PHOT
 
 ## Authenticated preservation
 
-Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POST JSON fields username, password, and useJwt=false to /api/users/login-password, retain the response cookie, and verify GET /api/users/me.
+For operations exposed by the Personal API, inspect
+`$BASE/api/openapi/v1.json` and send the personal token as an Authorization
+bearer header. Tokens always include `api:read`; the newspaper import workflow
+uses `api:sources` to create or resolve the issue and upload the clipping.
+Include the issue UUID in the exact multipart field `SourceId`. Never send the
+token to MCP or put it in a URL.
 
-- Submit a photo with POST /api/photo-assets as multipart form data. Preserve the returned ID.
+For a protected workflow that specifically requires a browser-compatible
+session, set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD, POST JSON fields
+username, password, and useJwt=false to /api/users/login-password, retain the
+response cookie, and verify GET /api/users/me.
+
+- Submit a photo with POST /api/photo-assets as multipart form data. For a newspaper clipping, first create or resolve its issue Source and include that Source UUID in the multipart `SourceId` field; preserve the returned ID.
 - Fetch current PhotoAssetDto before PATCH /api/photo-assets/{id}; only owners or privileged roles may edit.
 - Upload or remove /back-image only with owner/role permission.
 - Submit reports and correction proposals only when the user requests them. Moderators accept or decline proposals through protected resource routes.

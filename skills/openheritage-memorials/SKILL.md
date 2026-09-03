@@ -2,7 +2,7 @@
 name: openheritage-memorials
 description: Search and read OpenHeritage memorials, cemeteries, cemetery photos, maps, nearby records, statistics, public contribution data, exports, and posters, and perform authorized preservation workflows. Use for graves, commemorated people, cemetery discovery, and memorial photo transcription.
 metadata:
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # OpenHeritage Memorials and Cemeteries
@@ -23,12 +23,28 @@ BASE="\${OPENHERITAGE_BASE_URL:-https://openheritage.online}"
 COOKIE_JAR="\${OPENHERITAGE_COOKIE_JAR:-openheritage-cookies.txt}"
 ~~~
 
+## MCP public search and resources
+
+For public discovery, prefer `https://openheritage.online/mcp` with
+`search_memorials` and `search_cemeteries`. After selecting a record, use
+`resources/templates/list` and `resources/read` for memorial details,
+transcription statistics, external references, privacy-safe previews and image
+variants, cemetery details and statistics, and cemetery photo galleries and
+images. Resource URIs mirror the REST URLs documented below.
+
+MCP reads are anonymous, resolve merged record IDs to canonical URIs, and
+inline at most 10 MiB of binary content by default. Flagged memorials and their
+media remain unavailable, and memorial image resources always apply configured
+privacy redactions. Use REST for maps, nearby discovery, exports, posters,
+authenticated reads, and all preservation workflows.
+
 ## Memorial discovery
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
 | /api/v2/memorials/upload/defaults | None | UploadConfigurationDto: file limits, MIME types, concurrency and retries |
 | /api/memorials/search | q, cemId, cemName, lang, fromDate, toDate, yearFrom, yearTo, yearType, repeated givenName/surname, hasOcr, myOnly, needsOcr, hasPhoto, coordinateFilter, sortBy, sortDir, skip, take 1-100 | MemorialSearchResponseDto |
+| /api/memorials/search/paginated | Same filters and sorting as search, plus page and pageSize 1-100 | MemorialPageResponseDto with compact MemorialListItemDto items |
 | /api/memorials/{id} | Memorial GUID | MemorialDto; 308 when merged |
 | /api/memorials/{id}/preview | Memorial GUID | WebP primary-image thumbnail |
 | /api/memorials/{id}/similar-images | threshold 50-100, maxResults 1-50 | SimilarImagesResponseDto |

@@ -4,10 +4,11 @@ Public, cross-agent integration files for [OpenHeritage](https://openheritage.on
 
 OpenHeritage brings together Ukraine's largest public collection of memorial, grave, and archival document data.
 
-This repository connects compatible AI agents to OpenHeritage in two complementary ways:
+This repository connects compatible AI agents to OpenHeritage in three complementary ways:
 
 - a remote, anonymous, read-only MCP server for live public-record search;
-- five portable Agent Skills with domain guidance, safe REST fallbacks, and canonical OpenHeritage links.
+- five portable Agent Skills with domain guidance, safe REST fallbacks, and canonical OpenHeritage links;
+- a documented Personal API for user-authorized contributions with scoped bearer tokens.
 
 No API key is required for public search.
 
@@ -32,8 +33,36 @@ The endpoint uses MCP Streamable HTTP and exposes:
 - `search_sources`
 - `search_documents`
 - `search_repositories`
+- `search_places`
+- `search_authors`
+- `search_collections`
+
+The MCP server also exposes anonymous, read-only resources for selected public
+sources, documents and files, repositories, collections, canonical places,
+memorials, cemeteries, and Source classification tags. MCP never accepts a
+Personal API token.
 
 Use the root [`.mcp.json`](.mcp.json) with clients that support project or plugin MCP configuration.
+
+## Personal API and newspaper imports
+
+Use the Personal API only for user-authorized contributions:
+
+- interactive reference: `https://openheritage.online/api-docs`;
+- OpenAPI 3 document: `https://openheritage.online/api/openapi/v1.json`.
+
+Personal API tokens are bearer tokens and always include `api:read`. A
+classified newspaper import additionally uses `api:authors` to create or update
+the canonical newspaper organization authority and `api:sources` to create
+issue Sources, configure automated collections, and upload clipping photo
+assets. Send the token only in the `Authorization: Bearer ...` header, never to
+MCP or in a URL.
+
+The `openheritage-archives` skill contains the complete workflow. It resolves
+the environment-specific UUID for stable Source taxonomy code
+`record-kind-newspaper`, reuses the canonical author, creates each issue as a
+`publication`, optionally groups issues by exact year, and uploads each clipping
+with the issue UUID in multipart field `SourceId`.
 
 ## Add OpenHeritage to your agent / Додайте OpenHeritage до свого агента
 
@@ -143,7 +172,7 @@ Every Agent Skills-compatible host can also discover the five published skills f
 | Skill | Best for |
 |---|---|
 | `openheritage` | Broad searches across all public OpenHeritage domains |
-| `openheritage-archives` | Sources, documents, repositories, collections, page and file retrieval, OCR, parsing, entries, and exports |
+| `openheritage-archives` | Sources, documents, repositories, collections, classified newspaper imports, pages, files, entries, and exports |
 | `openheritage-photos` | Historical photos, media variants, photo maps, corrections, and people on photos |
 | `openheritage-memorials` | Memorials, cemeteries, cemetery photos, maps, statistics, and exports |
 | `openheritage-researches` | Public genealogy research projects, questions, hypotheses, places, and evidence |
@@ -158,8 +187,8 @@ The same versioned skill documents are also published from the OpenHeritage webs
 [`server.json`](server.json) publishes the remote server as `io.github.OpenHeritageOnline/public-search` in the official MCP Registry. The GitHub Actions workflow publishes it when an `mcp-v*` tag is pushed:
 
 ```bash
-git tag mcp-v2.9.6
-git push origin mcp-v2.9.6
+git tag mcp-v2.11.1
+git push origin mcp-v2.11.1
 ```
 
 The workflow uses GitHub OIDC, so it requires no stored token or domain-verification private key. Registry versions are immutable: bump `server.json` before creating a later tag.
@@ -178,6 +207,7 @@ creating a release tag.
 - Do not crawl, bulk-enumerate, or collect profile/contact data.
 - Prefer canonical OpenHeritage pages when sharing results with a user.
 - Use authenticated or mutating REST workflows only when the user explicitly requests them.
+- Never print, persist, or forward a Personal API token; request only the scopes needed for the authorized operation.
 
 ## Source of truth
 
