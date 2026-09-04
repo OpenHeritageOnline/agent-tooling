@@ -2,7 +2,7 @@
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.2.0
+  version: 3.3.0
 ---
 
 # OpenHeritage
@@ -11,7 +11,8 @@ Use this umbrella skill for cross-domain discovery. Switch to the focused skill 
 
 | Skill | Use for |
 |---|---|
-| openheritage-archives | Sources, documents, repositories, collections, newspaper imports, files, pages, XML, entries, exports |
+| openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, exports |
+| openheritage-newspaper-import | Complete newspaper issue preparation, cataloguing, automated collections, page uploads, PAGE XML, verification, and repair |
 | openheritage-photos | Historical photos, media variants, photo maps, corrections, people on photos |
 | openheritage-memorials | Memorials, cemeteries, cemetery photos, statistics, maps, exports, contributions |
 | openheritage-researches | Public and owned research projects and their mapped places |
@@ -39,11 +40,12 @@ operation schema, `x-api-required-scopes`, and multipart field names before a
 mutation instead of guessing a request shape.
 
 Personal API tokens are bearer tokens and always include `api:read`. Add only
-the write scopes needed for the requested work. Newspaper issue import needs
-`api:authors` to create or update the canonical newspaper authority and
-`api:sources` to create Sources, configure collections, and upload clipping
-photo assets. Never send a personal token to MCP: MCP is anonymous and
-read-only.
+the write scopes needed for the requested work. A complete newspaper issue
+import normally needs `api:authors` for the canonical newspaper authority,
+`api:sources` for issue Sources and the automated Collection, and
+`api:documents` for the issue document, page images, metadata, and PAGE XML.
+Standalone clipping PhotoAssets follow `openheritage-photos`. Never send a
+personal token to MCP: MCP is anonymous and read-only.
 
 ~~~bash
 curl -sS -H "Authorization: Bearer $OPENHERITAGE_API_TOKEN" \

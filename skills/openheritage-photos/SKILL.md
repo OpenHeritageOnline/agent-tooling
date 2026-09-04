@@ -1,13 +1,16 @@
 ---
 name: openheritage-photos
-description: Search and read OpenHeritage historical photo assets, image variants, highlights, mapped photos, correction proposals, and people identified on photos, and perform authorized photo preservation workflows. Use for historical photographs and subjects depicted in them.
+description: Search and read OpenHeritage historical photo assets, image variants, highlights, mapped photos, correction proposals, people identified on photos, and standalone newspaper clipping PhotoAssets, and perform authorized photo preservation workflows. Use for historical photographs and clippings, not complete newspaper issue ingestion.
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # OpenHeritage Photos
 
-Use this skill for the public historical-photo archive and people identified on photographs.
+Use this skill for the public historical-photo archive, people identified on
+photographs, and standalone newspaper clippings represented as PhotoAssets. Use
+`openheritage-newspaper-import` for complete issue Sources, documents, ordered
+page images, and PAGE XML.
 
 ## Safety and setup
 
@@ -114,10 +117,11 @@ curl -sS --get "$BASE/api/photo-asset-resources/persons-on-photo/$PERSON_ON_PHOT
 
 For operations exposed by the Personal API, inspect
 `$BASE/api/openapi/v1.json` and send the personal token as an Authorization
-bearer header. Tokens always include `api:read`; the newspaper import workflow
-uses `api:sources` to create or resolve the issue and upload the clipping.
-Include the issue UUID in the exact multipart field `SourceId`. Never send the
-token to MCP or put it in a URL.
+bearer header. Tokens always include `api:read`; a standalone newspaper
+clipping workflow uses `api:sources` to create or resolve its issue Source and
+upload the clipping PhotoAsset. Include the issue UUID in the exact multipart
+field `SourceId`. Never send the token to MCP or put it in a URL. Do not use
+this PhotoAsset workflow to represent all pages of a complete issue.
 
 For a protected workflow that specifically requires a browser-compatible
 session, set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD, POST JSON fields

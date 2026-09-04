@@ -1,8 +1,8 @@
 ---
 name: openheritage-archives
-description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports, and perform authorized contributions including classified newspaper issue and clipping imports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, collection hierarchies, and newspaper imports.
+description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports, and perform authorized archival contributions. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-newspaper-import for complete issue ingestion.
 metadata:
-  version: 1.2.1
+  version: 1.3.0
 ---
 
 # OpenHeritage Sources and Documents
@@ -56,114 +56,10 @@ Use --get and --data-urlencode for JSON discovery. Add -b "$COOKIE_JAR" only for
 
 Author authority records are separate from holding repositories. Discover them with `/api/authors?query=...`, read `/api/authors/{id}`, and use one or more returned UUIDs as repeated `authorId` filters. Repeated authors use OR semantics and combine with every other source filter.
 
-### Personal API newspaper issue import
-
-Use the interactive API reference at `$BASE/api-docs` and its OpenAPI document
-at `$BASE/api/openapi/v1.json`. Personal API tokens are bearer tokens and always
-include `api:read`. This workflow needs `api:authors` to create or update author
-authorities and `api:sources` to create Sources, configure collections, and
-upload clipping photo assets. MCP remains anonymous and read-only; never send a
-personal token to it.
-
-1. Discover the Source taxonomy with `GET /api/tags?entityType=source` or the
-   read-only MCP `source-classification-tags` resource. Walk the returned
-   `children` tree and locate the stable code `record-kind-newspaper`. Retain
-   its environment-specific `id`; never hard-code an ID from another
-   environment. `localizedNames` are display labels, while `isFacetRoot` marks
-   a grouping node that cannot be assigned. Newly assigned tags must be active,
-   selectable, applicable to `source`, and not facet roots. When editing a
-   classified Source, first read it and repeat every current assignment as an
-   `assignedTagId` query parameter so retired assignments and their ancestry
-   remain visible.
-
-   ~~~bash
-   curl -sS --get "$BASE/api/tags" \
-     --data-urlencode "entityType=source" |
-     jq '.. | objects | select(.code? == "record-kind-newspaper") |
-         {id, code, localizedNames, applicableEntityTypes,
-          isFacetRoot, isSelectable, isActive}'
-
-   # Repeat assignedTagId once for each classification already on the Source.
-   curl -sS --get "$BASE/api/tags" \
-     --data-urlencode "entityType=source" \
-     --data-urlencode "assignedTagId=$CURRENT_TAG_ID" | jq .
-   ~~~
-
-2. Search `GET /api/authors?query=...&kind=organization` and compare canonical
-   preferred names and aliases. Reuse the canonical newspaper authority when
-   one exists. Only otherwise create an organization with `POST /api/authors`
-   and a token containing `api:authors`. Fetch the current authority and include
-   `currentVersion` before `PUT /api/authors/{id}`.
-
-   ~~~bash
-   curl -sS --get "$BASE/api/authors" \
-     --data-urlencode "query=Назва газети" \
-     --data-urlencode "kind=organization" | jq .
-   ~~~
-
-   A minimal create body has this shape:
-
-   ~~~json
-   {
-     "kind": "organization",
-     "preferredNames": [{ "language": "uk", "value": "Назва газети" }],
-     "aliases": [],
-     "biography": {},
-     "links": []
-   }
-   ~~~
-
-3. Create one Source per issue with `POST /api/sources` and a token containing
-   `api:sources`:
-
-   ~~~json
-   {
-     "type": "publication",
-     "title": "Назва газети — 1932-05-17 — № 42",
-     "originDate": { "type": "exact", "value": "1932-05-17" },
-     "classificationTagIds": ["resolved-record-kind-newspaper-id"],
-     "authorCredits": [{
-       "authorId": "canonical-newspaper-author-id",
-       "roles": ["institutional-creator"],
-       "creditedAs": "Назва газети"
-     }]
-   }
-   ~~~
-
-   Put the exact publication date in ISO order before the printed issue number,
-   for example `Назва газети — 1932-05-17 — № 42`. Within a newspaper, ascending
-   title order then follows publication order without exposing machine-oriented
-   zero padding. Preserve combined issue numbers as printed, such as `№ 42–43`.
-
-   `publication` is the broad Source type and `record-kind-newspaper` is the
-   precise classification. Compatible tags from other Source taxonomy facets
-   may additionally describe an event, religion, or another dimension. Known
-   Source types are `book`, `publication`, `collection`, and `other`; custom
-   types must be lowercase hyphenated slugs, and repository-reserved types are
-   rejected. Date-expression types are `exact`, `approximate`, `before`,
-   `after`, and `range`.
-
-   On create, an omitted or empty `classificationTagIds` assigns no tags. On
-   update, omission preserves all assignments, `[]` clears them, and a
-   non-empty array replaces the complete set. The limit is 32 distinct IDs.
-   Fetch the current Source and preserve its version and unrelated fields
-   before `PUT /api/sources/{id}`.
-
-4. Optionally create or update the automated collection described below to
-   group issues, then verify the generated children and memberships.
-
-5. Upload each clipping with `POST /api/photo-assets` as multipart data using
-   the token scope required by this newspaper workflow. Include the issue
-   Source UUID in the case-sensitive `SourceId` form field and follow the live
-   OpenAPI schema for the remaining metadata and rights fields.
-
-   ~~~bash
-   curl -sS -X POST "$BASE/api/photo-assets" \
-     -H "Authorization: Bearer $OPENHERITAGE_API_TOKEN" \
-     -F "file=@$CLIPPING_FILE" \
-     -F "Title=$CLIPPING_TITLE" \
-     -F "SourceId=$SOURCE_ID" | jq .
-   ~~~
+For complete newspaper issue preparation, organization authority creation,
+automated year collections, issue cataloguing, and ordered image/PAGE XML
+uploads, use `openheritage-newspaper-import`. For a standalone newspaper
+clipping represented as a PhotoAsset, use `openheritage-photos`.
 
 ~~~bash
 curl -sS --get "$BASE/api/sources" \
@@ -312,56 +208,6 @@ curl -sS --get "$BASE/api/collections/$COLLECTION_ID/children" \
   --data-urlencode "page=1" \
   --data-urlencode "pageSize=25" | jq .
 ~~~
-
-### Automated newspaper collections
-
-Create with `POST /api/collections`; update with
-`PUT /api/collections/{id}` after fetching the current collection and version.
-Use the structured `automation` object. Its `criteria` may contain
-`sourceAuthor` and `repositoryReferenceRegex`, combined by
-`criteriaMatchMode: "all"` or `"any"`. Use `dateHierarchy` to group matching
-issues into year children:
-
-~~~json
-{
-  "title": { "uk": "Випуски газети" },
-  "visibility": "public",
-  "automation": {
-    "isActive": true,
-    "criteriaMatchMode": "all",
-    "criteria": [{
-      "kind": "sourceAuthor",
-      "authorId": "canonical-newspaper-author-id"
-    }],
-    "grouping": {
-      "kind": "dateHierarchy",
-      "dateSource": "originDate",
-      "granularity": "year",
-      "nonExactBucket": {
-        "key": "not-exact-year",
-        "title": {
-          "uk": "Неточний або невідомий рік",
-          "en": "Non-exact or unknown year"
-        }
-      }
-    }
-  }
-}
-~~~
-
-For `dateSource: "originDate"`, only exact `yyyy`, `yyyy-MM`, or `yyyy-MM-dd`
-values qualify for a year child. For `dateSource: "coverage"`, every coverage
-window must be exact and all windows must fall within one year. Approximate,
-before, after, range, missing, cross-year, or otherwise ineligible dates go to
-the required localized `nonExactBucket`. The currently supported granularity is
-`year`.
-
-Add a `repositoryReferenceRegex` criterion only when issue membership must also
-match a specific repository reference. Give it `repositoryId` and
-`referenceCodePattern`; use capture mappings and `capturedHierarchy` only when
-the desired grouping is based on regex captures instead of issue dates.
-Existing flattened repository automation fields remain accepted for
-compatibility but are deprecated; do not use them for new rules.
 
 ## Rate limits and request pacing
 
