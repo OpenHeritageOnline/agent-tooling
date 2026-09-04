@@ -3,7 +3,7 @@
   "name": "io.github.OpenHeritageOnline/public-search",
   "title": "OpenHeritage Public Search",
   "description": "Read-only public search and resource access for OpenHeritage genealogy and cultural heritage records.",
-  "version": "2.11.1",
+  "version": "2.11.2",
   "repository": {
     "url": "https://github.com/OpenHeritageOnline/agent-tooling",
     "source": "github"
