@@ -7,7 +7,7 @@ OpenHeritage brings together Ukraine's largest public collection of memorial, gr
 This repository connects compatible AI agents to OpenHeritage in three complementary ways:
 
 - a remote, anonymous, read-only MCP server for live public-record search;
-- six portable Agent Skills with domain guidance, safe REST fallbacks, and canonical OpenHeritage links;
+- seven portable Agent Skills with domain guidance, safe REST fallbacks, and canonical OpenHeritage links;
 - a documented Personal API for user-authorized contributions with scoped bearer tokens.
 
 No API key is required for public search.
@@ -44,7 +44,7 @@ Personal API token.
 
 Use the root [`.mcp.json`](.mcp.json) with clients that support project or plugin MCP configuration.
 
-## Personal API and newspaper imports
+## Personal API and imports
 
 Use the Personal API only for user-authorized contributions:
 
@@ -52,11 +52,18 @@ Use the Personal API only for user-authorized contributions:
 - OpenAPI 3 document: `https://openheritage.online/api/openapi/v1.json`.
 
 Personal API tokens are bearer tokens and always include `api:read`. A
-classified newspaper import additionally uses `api:authors` to create or update
-the canonical newspaper organization authority, `api:sources` to create issue
-Sources and configure the automated Collection, and `api:documents` to create
-the issue document and upload ordered page images and PAGE XML. Send the token
-only in the `Authorization: Bearer ...` header, never to MCP or in a URL.
+generic catalog-only Source import uses `api:sources`; adding SourceDocuments,
+original files, page images, or PAGE XML also uses `api:documents`. A Source is
+valid without documents when no digital representation is available. The
+`openheritage-source-import` skill explains repository references, Authors,
+classification tags, coverage dates and places, and optional document
+ingestion.
+
+A classified newspaper import additionally uses `api:authors` to create or
+update the canonical newspaper organization authority, `api:sources` to create
+issue Sources and configure the automated Collection, and `api:documents` to
+create the issue document and upload ordered page images and PAGE XML. Send the
+token only in the `Authorization: Bearer ...` header, never to MCP or in a URL.
 
 The `openheritage-newspaper-import` skill contains the complete issue workflow.
 It resolves the environment-specific UUID for stable Source taxonomy code
@@ -167,7 +174,7 @@ npx skills add OpenHeritageOnline/agent-tooling
 
 The repository also includes a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json). Plugin-aware hosts can load the repository checkout directly and use its bundled `.mcp.json`.
 
-Every Agent Skills-compatible host can also discover the six published skills from the [OpenHeritage Agent Skills index](https://openheritage.online/.well-known/agent-skills/index.json). For an MCP host without plugin support, add the `openheritage` entry from [`.mcp.json`](.mcp.json) to its user or project MCP configuration.
+Every Agent Skills-compatible host can also discover the seven published skills from the [OpenHeritage Agent Skills index](https://openheritage.online/.well-known/agent-skills/index.json). For an MCP host without plugin support, add the `openheritage` entry from [`.mcp.json`](.mcp.json) to its user or project MCP configuration.
 
 ## Skills
 
@@ -175,6 +182,7 @@ Every Agent Skills-compatible host can also discover the six published skills fr
 |---|---|
 | `openheritage` | Broad searches across all public OpenHeritage domains |
 | `openheritage-archives` | Sources, documents, repositories, collections, pages, files, entries, and exports |
+| `openheritage-source-import` | Catalog-only Sources and optional SourceDocument ingestion with repository, Author, tag, date, and place provenance |
 | `openheritage-newspaper-import` | Complete newspaper issue preparation, organization Authors, automated year Collections, repository and publication-place provenance, ordered page uploads, PAGE XML, verification, and repair |
 | `openheritage-photos` | Historical photos, media variants, photo maps, corrections, and people on photos |
 | `openheritage-memorials` | Memorials, cemeteries, cemetery photos, maps, statistics, and exports |

@@ -2,7 +2,7 @@
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.3.0
+  version: 3.4.0
 ---
 
 # OpenHeritage
@@ -12,6 +12,7 @@ Use this umbrella skill for cross-domain discovery. Switch to the focused skill 
 | Skill | Use for |
 |---|---|
 | openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, exports |
+| openheritage-source-import | Catalog-only Sources, repository references, Authors, tags, coverage, optional SourceDocuments and files |
 | openheritage-newspaper-import | Complete newspaper issue preparation, cataloguing, automated collections, page uploads, PAGE XML, verification, and repair |
 | openheritage-photos | Historical photos, media variants, photo maps, corrections, people on photos |
 | openheritage-memorials | Memorials, cemeteries, cemetery photos, statistics, maps, exports, contributions |
@@ -40,8 +41,10 @@ operation schema, `x-api-required-scopes`, and multipart field names before a
 mutation instead of guessing a request shape.
 
 Personal API tokens are bearer tokens and always include `api:read`. Add only
-the write scopes needed for the requested work. A complete newspaper issue
-import normally needs `api:authors` for the canonical newspaper authority,
+the write scopes needed for the requested work. Generic Source creation and
+optional SourceDocument ingestion follow `openheritage-source-import`. A
+complete newspaper issue import normally needs `api:authors` for the canonical
+newspaper authority,
 `api:sources` for issue Sources and the automated Collection, and
 `api:documents` for the issue document, page images, metadata, and PAGE XML.
 Standalone clipping PhotoAssets follow `openheritage-photos`. Never send a

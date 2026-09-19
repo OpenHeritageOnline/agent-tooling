@@ -1,8 +1,8 @@
 ---
 name: openheritage-archives
-description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports, and perform authorized archival contributions. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-newspaper-import for complete issue ingestion.
+description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-source-import for generic ingestion and openheritage-newspaper-import for complete newspaper issues.
 metadata:
-  version: 1.3.0
+  version: 1.3.1
 ---
 
 # OpenHeritage Sources and Documents
@@ -55,6 +55,10 @@ Use --get and --data-urlencode for JSON discovery. Add -b "$COOKIE_JAR" only for
 | /api/sources/{id} | Source GUID | SourceDto or 404/visibility error |
 
 Author authority records are separate from holding repositories. Discover them with `/api/authors?query=...`, read `/api/authors/{id}`, and use one or more returned UUIDs as repeated `authorId` filters. Repeated authors use OR semantics and combine with every other source filter.
+
+For authorized creation of catalog-only Sources, repository references,
+coverage, and optional SourceDocuments, original files, pages, or PAGE XML, use
+`openheritage-source-import`.
 
 For complete newspaper issue preparation, organization authority creation,
 automated year collections, issue cataloguing, and ordered image/PAGE XML
@@ -218,6 +222,11 @@ curl -sS --get "$BASE/api/collections/$COLLECTION_ID/children" \
 - A 429 during login may be an account lockout. Do not retry credentials; wait for the server-directed delay or ask the user to retry later.
 
 ## Authenticated contributions
+
+Use `openheritage-source-import` for generic Source and SourceDocument creation,
+including Source-only catalog/reference records with no digital files. The
+summary below identifies available contribution areas but is not an import
+workflow.
 
 Prefer a personal API token for operations published in
 `$BASE/api/openapi/v1.json`. Send it as `Authorization: Bearer
