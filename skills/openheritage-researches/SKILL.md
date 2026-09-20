@@ -73,7 +73,7 @@ Use map results as navigation aids. Coordinate proximity does not prove that a p
 
 ## Authenticated project management
 
-Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POST JSON fields username, password, and useJwt=false to /api/users/login-password, store the HTTP-only response cookie, and verify GET /api/users/me.
+Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POST JSON fields username and password to /api/users/login-password, store the HTTP-only response cookie, and verify GET /api/users/me.
 
 | Operation | Endpoint | Rules |
 |---|---|---|

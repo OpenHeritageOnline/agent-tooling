@@ -133,7 +133,7 @@ Use an already-known canonical slug when available; do not query profile data to
 
 Use a personal API token for operations exposed by the OpenAPI document. For a
 workflow that specifically requires a browser-compatible session, password
-login issues an HTTP-only auth_token cookie. Set useJwt to false:
+login issues an HTTP-only auth_token cookie:
 
 ~~~bash
 curl -sS -c "$COOKIE_JAR" -X POST "$BASE/api/users/login-password" \
@@ -141,7 +141,7 @@ curl -sS -c "$COOKIE_JAR" -X POST "$BASE/api/users/login-password" \
   -d "$(jq -n \
     --arg username "$OPENHERITAGE_USERNAME" \
     --arg password "$OPENHERITAGE_PASSWORD" \
-    '{username:$username,password:$password,useJwt:false}')" | jq .
+    '{username:$username,password:$password}')" | jq .
 curl -sS -b "$COOKIE_JAR" "$BASE/api/users/me" | jq .
 ~~~
 

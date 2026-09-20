@@ -233,7 +233,7 @@ Prefer a personal API token for operations published in
 $OPENHERITAGE_API_TOKEN`, never in the URL, and verify each operation's
 `x-api-required-scopes`. For a protected workflow that specifically requires a
 browser-compatible session, set OPENHERITAGE_USERNAME and
-OPENHERITAGE_PASSWORD, POST JSON fields username, password, and useJwt=false to
+OPENHERITAGE_PASSWORD, POST JSON fields username and password to
 /api/users/login-password, save the response cookie, reuse it with the cookie
 jar, and verify GET /api/users/me before mutation.
 

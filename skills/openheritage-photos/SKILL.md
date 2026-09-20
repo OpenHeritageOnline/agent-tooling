@@ -125,7 +125,7 @@ this PhotoAsset workflow to represent all pages of a complete issue.
 
 For a protected workflow that specifically requires a browser-compatible
 session, set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD, POST JSON fields
-username, password, and useJwt=false to /api/users/login-password, retain the
+username and password to /api/users/login-password, retain the
 response cookie, and verify GET /api/users/me.
 
 - Submit a photo with POST /api/photo-assets as multipart form data. For a newspaper clipping, first create or resolve its issue Source and include that Source UUID in the multipart `SourceId` field; preserve the returned ID.

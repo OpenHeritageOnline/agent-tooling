@@ -168,7 +168,7 @@ curl -sS "$BASE/api/cemeteries/$CEMETERY_ID/photos" | jq .
 
 ## Authenticated preservation
 
-Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POST JSON fields username, password, and useJwt=false to /api/users/login-password, retain the response cookie, and verify GET /api/users/me.
+Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POST JSON fields username and password to /api/users/login-password, retain the response cookie, and verify GET /api/users/me.
 
 - Prefer v2 upload: read defaults, POST /api/v2/memorials/upload/preview with a stable clientFileId, review proposed coordinates/warnings, then multipart POST /api/v2/memorials/upload using the same clientFileId.
 - Use legacy POST /api/memorials/upload only for unsupported metadata and provide a stable Idempotency-Key.
