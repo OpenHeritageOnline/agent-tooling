@@ -2,7 +2,7 @@
 name: openheritage-archives
 description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-source-import for generic ingestion and openheritage-newspaper-import for complete newspaper issues.
 metadata:
-  version: 1.3.1
+  version: 1.4.0
 ---
 
 # OpenHeritage Sources and Documents
@@ -32,8 +32,12 @@ COOKIE_JAR="\${OPENHERITAGE_COOKIE_JAR:-openheritage-cookies.txt}"
 ## MCP public search
 
 For public discovery, prefer `https://openheritage.online/mcp` and its
-`search_sources`, `search_documents`, and `search_repositories` tools. After a
-tool returns an identifier, use `resources/templates/list` and `resources/read`
+`search_sources`, `search_documents`, and `search_repositories` tools. To find
+words, names or phrases inside transcribed pages, use `search_page_text` with a
+required `query` and optional `documentId`, `sourceId` and `semantic` (default
+true: keyword and meaning-based matches). Each hit names its document, page
+number and page key and links to `/documents/{documentId}/pages/{pageKey}`.
+After a tool returns an identifier, use `resources/templates/list` and `resources/read`
 for public sources, repositories, collections, documents, current pages, XML,
 page images, previews, display images, and document files. Resource URIs mirror
 the REST URLs below.
@@ -170,6 +174,26 @@ curl -sS --get "$DOC/entries" \
 ~~~
 
 The path form /pages/{pageKey}/xml/{versionId} is authenticated; do not present it as an anonymous endpoint.
+
+### Searching page text
+
+Page transcriptions (from PAGE XML uploads and from `PUT /pages/{pageKey}/transcription`),
+page notes and page titles are indexed for search within seconds of being saved.
+Search them through the global search endpoint with `entityTypes=page`:
+
+~~~bash
+curl -sS --get "$BASE/api/search" \
+  --data-urlencode "q=Петренко" \
+  --data-urlencode "entityTypes=page" \
+  --data-urlencode "documentId=$DOCUMENT_ID" \
+  --data-urlencode "allPages=true" | jq '.hits[].page'
+~~~
+
+Page hits carry `page.documentId`, `page.pageKey`, `page.pageNo` and the matched
+passage in `highlights.text`. Without `allPages=true`, global search returns one
+hit per document (its best-matching page); with it, one hit per matching page.
+Link a reader to `/documents/{documentId}/pages/{pageKey}?q=<query>` to open the
+page with the searched words marked.
 
 ## Repositories
 

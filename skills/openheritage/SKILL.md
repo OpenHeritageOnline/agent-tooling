@@ -2,7 +2,7 @@
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.4.0
+  version: 3.5.0
 ---
 
 # OpenHeritage
@@ -68,8 +68,9 @@ For read-only public record discovery, prefer the MCP Streamable HTTP server at
 `search_places` rather than the federated `search_records` index. It accepts a
 required text query plus optional latitude, longitude, radiusKm, typeCode, and
 hasCoordinates filters.
-It also provides `search_authors` and `search_collections`; all MCP tools and
-resources are anonymous and read-only. The source-classification resource mirrors
+It also provides `search_authors`, `search_collections` and `search_page_text`,
+which searches the transcribed text of document pages and links each hit to its
+page; all MCP tools and resources are anonymous and read-only. The source-classification resource mirrors
 `/api/tags?entityType=source`.
 
 After selecting a place, use `resources/templates/list` and `resources/read` for
@@ -96,11 +97,12 @@ GET /api/search is anonymous federated lexical or hybrid search.
 | Parameter | Rules |
 |---|---|
 | q | Required non-empty query |
-| entityTypes | Repeatable filter: source, document, entry, memorial-person, memorial-placeholder, cemetery, research, collection, person, photo-asset, author |
+| entityTypes | Repeatable filter: source, document, page, entry, memorial-person, memorial-placeholder, cemetery, research, collection, person, photo-asset, author |
 | documentId, sourceId | Optional string IDs narrowing document-related hits |
 | page | One-based; values below 1 become 1 |
 | pageSize | Clamped to 1-100 |
 | semantic | false for lexical search; true for hybrid semantic search when configured |
+| allPages | false (default) groups page-text hits one per document, showing its best page; true returns one hit per matching page |
 
 The response is SearchPageDto. Entry hits may be enriched with their source and document context. Search still enforces record visibility for the current caller.
 
