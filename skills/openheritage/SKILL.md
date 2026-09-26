@@ -69,8 +69,8 @@ For read-only public record discovery, prefer the MCP Streamable HTTP server at
 required text query plus optional latitude, longitude, radiusKm, typeCode, and
 hasCoordinates filters.
 It also provides `search_authors`, `search_collections` and `search_page_text`,
-which searches the transcribed text of document pages and links each hit to its
-page; all MCP tools and resources are anonymous and read-only. The source-classification resource mirrors
+which searches the transcribed text of document pages, including the text layer of
+uploaded PDFs, and links each hit to its page; all MCP tools and resources are anonymous and read-only. The source-classification resource mirrors
 `/api/tags?entityType=source`.
 
 After selecting a place, use `resources/templates/list` and `resources/read` for

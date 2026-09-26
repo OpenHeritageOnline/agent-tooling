@@ -175,10 +175,21 @@ curl -sS --get "$DOC/entries" \
 
 The path form /pages/{pageKey}/xml/{versionId} is authenticated; do not present it as an anonymous endpoint.
 
+### Pages from a PDF text layer
+
+When an uploaded PDF has a text layer, each PDF page becomes a document page with **no image**:
+`currentImage` is `null`, `sourceAssetId` names the PDF original asset, `assetPageNo` is the
+one-based page inside that PDF, and `transcription.source` is `pdf-text`. Such page keys look like
+`pdf-{first 8 hex digits of the asset id}-{page, 5 digits}`. The `/image`, `/preview` and `/display`
+endpoints return 404 for these pages; read the text from the page's transcription, and fetch the PDF
+itself from `/files/{sourceAssetId}` (single Range requests are supported). A browser opens it at
+the page with the `#page={assetPageNo}` fragment. A PDF without a text layer produces no pages.
+
 ### Searching page text
 
-Page transcriptions (from PAGE XML uploads and from `PUT /pages/{pageKey}/transcription`),
-page notes and page titles are indexed for search within seconds of being saved.
+Page transcriptions (from PAGE XML uploads, from `PUT /pages/{pageKey}/transcription`, and
+from the text layer of uploaded PDFs), page notes and page titles are indexed for search within
+seconds of being saved. Hits from a PDF text layer carry `transcriptionSource: "pdf-text"`.
 Search them through the global search endpoint with `entityTypes=page`:
 
 ~~~bash
