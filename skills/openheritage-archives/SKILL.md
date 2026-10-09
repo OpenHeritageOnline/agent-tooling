@@ -2,7 +2,7 @@
 name: openheritage-archives
 description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-source-import for generic ingestion and openheritage-newspaper-import for complete newspaper issues.
 metadata:
-  version: 1.4.0
+  version: 1.5.0
 ---
 
 # OpenHeritage Sources and Documents
@@ -49,6 +49,65 @@ the endpoint supports it. Keep REST for discovery filters, entries, exports,
 authenticated visibility, historical versions, and contribution workflows.
 
 Use --get and --data-urlencode for JSON discovery. Add -b "$COOKIE_JAR" only for caller-aware visibility. Send binary responses to files rather than jq.
+
+## Reading a source's documents
+
+A Source holds zero or more SourceDocuments; a document holds ordered pages.
+Each page may carry an image, a transcription, a contributor note and research
+metadata (title, description, reference links). Read in this order and stop as
+soon as you have the answer:
+
+1. **Search first; it is cheap.** Platform search is an index lookup, far
+   cheaper than reading pages, images or files. To find a name, place, date or
+   phrase inside a source, call `search_page_text` (MCP) or `GET /api/search`
+   with `entityTypes=page`, narrowed by `sourceId` or `documentId`, and
+   `allPages=true` for every matching page rather than one per document. The
+   page index covers transcriptions, PDF text layers, page notes and page
+   metadata titles and descriptions. Each hit gives `documentId`, `pageKey`,
+   `pageNo` and the matched passage, so you can jump straight to the page.
+   Run several narrow searches (spelling variants, Cyrillic and Latin forms,
+   `semantic=false` for exact words) before reading pages in sequence.
+2. **List the source's documents**: `GET /api/sources/{sourceId}/documents`.
+   Each SourceDocumentDto gives `title`, `documentType`, `pageCount`,
+   `hasPageImages`, `hasEntries`, `entryCount` and `originalAssets`. Pick the
+   document from that metadata. If `hasEntries` is true, query `/entries` with
+   filters: it is structured and usually cheaper than reading pages.
+3. **Read page metadata to navigate.** `GET .../pages` returns every active
+   page in order with `pageNo`, `pageKey`, `metadata.title`,
+   `metadata.description`, `note`, `currentImage` (size and dimensions) and the
+   full `transcription`. For a long document, project only what you need
+   instead of keeping the whole response:
+
+   ~~~bash
+   DOC="$BASE/api/sources/$SOURCE_ID/documents/$DOCUMENT_ID"
+   curl -sS "$DOC/pages" | jq '[.[] | {pageNo, pageKey,
+     title: (.metadata.title // [] | map(.text) | join(" / ")),
+     note: .note.text,
+     hasImage: (.currentImage != null),
+     textChars: (.transcription.fullText // "" | length)}]'
+   ~~~
+
+   Page titles often name the section, year, parish or register part, so use
+   them (and `pageNo`) to find the right range rather than reading every page.
+4. **Read the transcription text** of the selected page:
+   `GET .../pages/{pageKey}` → `transcription.fullText`, plus `zones` (regions
+   and lines with coordinates) and `transcription.source`: `page-xml`, `ocr`,
+   `pdf-text` or `manual` (typed or corrected by a person). Use `GET .../pages/{pageKey}/xml`
+   only when the user needs the PAGE XML itself.
+5. **Fetch an image only when text is missing or must be checked** against the
+   original. Prefer `/preview` (small WebP) to see the layout, then `/display`
+   (JPEG derivative; 404 means none exists, fall back to `/image`), and
+   `/image` (original, possibly a large TIFF) only when full resolution is
+   needed. `currentImage.fileSizeBytes` tells you the cost before you download.
+   Pages without an image come from a PDF text layer; see below.
+6. **Original files** (`originalAssets`, such as a PDF or an archive) are the
+   most expensive read. Fetch them with HEAD first and use Range requests.
+
+Through MCP, the same steps are `search_page_text` → resources
+`source-document-pages` → `source-document-page` → `source-document-page-preview`,
+`-display` or `-image`. When you cite a page to the user, link
+`https://openheritage.online/{locale}/documents/{documentId}/pages/{pageKey}`,
+adding `?q=<query>` to highlight the searched words.
 
 ## Sources
 
@@ -251,6 +310,7 @@ curl -sS --get "$BASE/api/collections/$COLLECTION_ID/children" \
 ## Rate limits and request pacing
 
 - Keep one archive request in flight. Fetch pages, entries, files, and exports sequentially; never crawl or prefetch an entire repository, collection, or document.
+- Searches are cheap: prefer several narrow `search_page_text` or `/api/search` calls to reading a document page by page.
 - Use the narrowest filters and smallest practical page. Download a file, page image, XML, CSV, or JSONL only after the user selects it; reuse the response instead of re-downloading it.
 - On 429, stop issuing calls. Honor Retry-After or a server-provided delay; otherwise use full-jitter backoff with ceilings of 1, 2, then 4 seconds and make at most three retries.
 - Do not automatically retry 409 or 422. Retry a mutation after 429 only with the original idempotency/session identifier and explicit user intent; never retry an unkeyed mutation.

@@ -2,7 +2,7 @@
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.5.0
+  version: 3.6.0
 ---
 
 # OpenHeritage
@@ -116,7 +116,7 @@ curl -sS --get "$BASE/api/search" \
   --data-urlencode "pageSize=20" | jq .
 ~~~
 
-Use broad search first, then read the exact entity through its focused skill. Keep entry mention-only leads separate from direct source, document, person, or memorial matches.
+Use broad search first, then read the exact entity through its focused skill. To read inside a source's documents (pages, transcriptions, images), follow "Reading a source's documents" in openheritage-archives: search page text first, navigate by page metadata, read transcriptions, and fetch images only when needed. Searches are cheap; prefer them to paging through documents. Keep entry mention-only leads separate from direct source, document, person, or memorial matches.
 
 ## Profile links only
 
