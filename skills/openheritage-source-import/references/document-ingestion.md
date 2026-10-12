@@ -55,6 +55,19 @@ For an external-only representation, record the supported external URL and
 rights/visibility mode from the live contract. Do not download or rehost files
 when the evidence or permission supports linking only.
 
+### Long description and table of contents
+
+`advancedDescription` is long-form Markdown shown on the document's description
+tab, the place for a table of contents, an abstract, or a finding aid. The create
+request has no such field: send it afterwards with
+`PATCH /api/sources/{sourceId}/documents/{documentId}`, including the document's
+`currentVersion` and leaving the other fields null. Link to a page of the same
+document with `[[pageKey]]`, which shows the key, or `[[pageKey|label]]`, which
+shows the label (for example `[[pdf-1a2b3c4d-00007|p. 5]]`). Take page keys from
+`GET .../pages` after page extraction finishes; pages derived from a PDF are
+keyed `pdf-{first 8 characters of the asset ID}-{PDF page number, 5 digits}`,
+which is the position in the file, not the printed page number.
+
 ## Original files and page representations
 
 An original asset preserves the supplied document-level file, such as a PDF,
