@@ -2,7 +2,7 @@
 name: openheritage-newspaper-import
 description: Prepare, catalog, OCR, import, repair, and verify complete scanned newspaper issues in OpenHeritage. Use for issue-level publication Sources, newspaper organization authors, automated year collections, repository and publication-place provenance, ordered document pages, PAGE XML, and resumable imports. Do not use for standalone newspaper clipping PhotoAssets.
 metadata:
-  version: 1.0.0
+  version: 1.2.0
 ---
 
 # OpenHeritage Newspaper Import
@@ -56,6 +56,7 @@ Prefer:
 
 - Search before every Author, Collection, Source, and document creation. Reuse one exact match and stop on multiple plausible matches.
 - Give the imported Collection a stable series reference and put the same series/issue marker in the document description.
+- Write the Collection title in the newspaper's own language as its original (`originalTitle` with that language, or `titleVersions` with one `original`); add other languages only as real translations. Never key a Russian or English masthead title as `uk`.
 - Fetch current state and version before PUT or PATCH and preserve fields outside the requested change.
 - Keep one mutation in flight. After each success, checkpoint request identity, returned IDs, versions, hashes, and the next intended action.
 - After an unknown mutation outcome, read current state before retrying. Do not retry 409 or 422 blindly.

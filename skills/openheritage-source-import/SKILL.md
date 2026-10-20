@@ -2,7 +2,7 @@
 name: openheritage-source-import
 description: Create and verify OpenHeritage Sources as catalog or repository-reference records, and optionally ingest SourceDocuments, original files, ordered page images, and PAGE XML. Use for authorized generic source imports with repository provenance, authors, classification tags, coverage dates, and places. Use openheritage-newspaper-import for complete newspaper issues.
 metadata:
-  version: 1.0.0
+  version: 1.4.0
 ---
 
 # OpenHeritage Source Import
@@ -59,7 +59,8 @@ Before creating or updating a Source, read [references/source-model.md](referenc
 - Authors are reusable person or organization authority records. Credit only evidenced creators or contributors, using supported roles and `creditedAs` for the printed byline or imprint.
 - Classification tags describe evidenced Source categories. Select only active, selectable tags applicable to Sources; never use a facet root or an environment-specific ID copied from an example.
 - `originDate` is when the Source itself was created or published. Coverage date windows and places describe what its contents cover. Do not substitute one for the other.
-- Preserve an unresolved historical place name when no single canonical place is proven. Never choose among ambiguous places or infer coordinates.
+- Preserve an unresolved historical place name when no single canonical place is proven. Never choose among ambiguous places or infer coordinates. To put such a name in the shared "Places to match" queue, add `unresolved` `{reason: ambiguous|vanished|renamed|other, area?, candidates?, note?}` to its coverage location; a matched name keeps its `name` and gains `canonicalPlaceId`.
+- Write the title and descriptions in the language the catalog prints them in, as the original; add a translation only when the catalog gives one. Send `titleVersions` and `descriptionVersions` to name the languages (see `references/source-model.md`); `languages` is the language of the material itself, not of its title. The API accepts Russian: Russian may be the original, and a Russian text a person wrote beside another original is kept as a human version; the interface and machine translation never create Russian translations.
 
 ## Checkpoints and safe retries
 

@@ -99,6 +99,12 @@ on conflicts. A new collection uses `POST /api/collections` with `api:sources`:
 }
 ~~~
 
+The example is a Ukrainian-language newspaper. For a masthead in another language, key the title by that
+language and name it the original, for example `"originalTitle": {"lang": "pl", "text": "Gazeta Lwowska"}` or
+`"titleVersions": {"pl": {"text": "Gazeta Lwowska", "kind": "original"}, "uk": {"text": "Львівська газета",
+"kind": "human"}}` (versions win over `title`; the API accepts Russian, as the original or a human version beside another original). A later `PUT` that leaves out
+`originalTitle` or the versions keeps them.
+
 Only exact `yyyy`, `yyyy-MM`, or `yyyy-MM-dd` origin dates qualify for a year
 child. Approximate, before, after, range, missing, or invalid dates go to the
 fallback child. Do not send deprecated flattened automation fields. Before

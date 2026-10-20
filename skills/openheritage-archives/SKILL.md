@@ -2,7 +2,7 @@
 name: openheritage-archives
 description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-source-import for generic ingestion and openheritage-newspaper-import for complete newspaper issues.
 metadata:
-  version: 1.5.0
+  version: 1.10.0
 ---
 
 # OpenHeritage Sources and Documents
@@ -113,11 +113,15 @@ adding `?q=<query>` to highlight the searched words.
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /api/sources | query, limit; add skip for paged mode; type, approvalStatus, repositoryId, repeated authorId, visibility, hasDocuments, sortBy, sortDesc | SourceDto[] without skip; SourcePagedResponseDto with skip. Paged limit is 1-1000; legacy results are capped at 50 |
+| /api/sources | query, limit; add skip for paged mode; type, approvalStatus, repositoryId, repeated authorId, visibility, hasDocuments, sortBy=createdAt\|title\|reference (natural fund/opys/case order; sources without a reference last in both directions), sortDesc, locale (author names), includeCounts=true (adds approvedPhotoCount, the source's approved photos) | SourceDto[] without skip; SourcePagedResponseDto with skip. Paged limit is 1-1000; legacy results are capped at 50. Paged rows also carry documentCount, pageCount and previewDocumentId |
 | /api/sources/repository-links | referenceCode, url, repeated repositoryId, referenceType, limit | SourceRepositoryLinkLookupDto[] or 422 |
-| /api/sources/{id} | Source GUID | SourceDto or 404/visibility error |
+| /api/sources/{id} | Source GUID; locale | SourceDto or 404/visibility error |
 
-Author authority records are separate from holding repositories. Discover them with `/api/authors?query=...`, read `/api/authors/{id}`, and use one or more returned UUIDs as repeated `authorId` filters. Repeated authors use OR semantics and combine with every other source filter.
+List and detail responses fill `repositoryLinks[].repositoryName`/`repositoryShortName` for repositories you may see, and `authorCredits[].displayName`/`kind`/`placeName`, so there is no need to look each one up.
+
+A Source's detail (`/api/sources/{id}`) carries its title and descriptions in every language: `title` is the original title's text and `descriptions` the original and human versions, while `titleVersions` and `descriptionVersions` give each version with its kind — `{ "uk": { "text": "…", "kind": "original" }, "en": { "text": "…", "kind": "human" } }`. List rows carry only `title` and `descriptions`. `inferred: true` marks a language guessed for a text saved before versions (the title's is the first entry of `languages`, else `uk`); `kind: machine` is an unreviewed machine translation, never a person's. Quote the original when citing a Source, and say which language a translation is in. `languages` stays the language of the material itself, not of its title.
+
+Author authority records are separate from holding repositories. Discover them with `/api/authors?query=...`, read `/api/authors/{id}` (its `externalIdentifiers` carry Wikidata, VIAF and ISNI ids with their URLs), and use one or more returned UUIDs as repeated `authorId` filters. `/api/authors/{id}/overview?locale=` sums up the author's visible works: source, map, photo and scanned-page counts, credit roles, five-year periods, canonical places, repositories, related authors and the first six sources by date as slim rows; it is cached for a few minutes. Repeated authors use OR semantics and combine with every other source filter.
 
 For authorized creation of catalog-only Sources, repository references,
 coverage, and optional SourceDocuments, original files, pages, or PAGE XML, use
@@ -269,11 +273,14 @@ page with the searched words marked.
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /api/repositories | query, limit; add skip for paged mode; type, visibility, country, onlyMine, sortBy, sortDesc | RepositoryDto[] or RepositoryPagedResponseDto |
+| /api/repositories | query (matches the name, the short name and other-language names), limit; add skip for paged mode; type, visibility, country, onlyMine, sortBy, sortDesc | RepositoryDto[] or RepositoryPagedResponseDto |
 | /api/repositories/selectable | query, limit | Repositories visible for source linking |
-| /api/repositories/{id} | Repository GUID | RepositoryDto |
+| /api/repositories/{id} | Repository GUID | RepositoryDto; `profile` holds the optional facts an archive page shows: other-language names, founding year, kind, locality, reading-room hours, copy-request note and holdings as the archive states them (all optional) |
 | /api/repositories/selectable/{id} | Repository GUID | Selectable RepositoryDto |
-| /api/repositories/{id}/sources | query, page zero-based, pageSize 1-100, sortBy, sortDirection=asc|desc | RepositorySourceReferenceListResponseDto |
+| /api/repositories/{id}/sources | query, page zero-based, pageSize 1-100, sortBy, sortDirection=asc|desc | RepositorySourceReferenceListResponseDto; items carry referenceCode, url and referenceType, and totalCount counts only sources the caller may see |
+| /api/repositories/{id}/summary | Repository GUID | RepositorySummaryDto: public sources, pages scanned, fonds, first and last year, transcribed and scanned source counts, the ten largest fonds. Served from a cache and rebuilt in the background; `ready` is false until the first build |
+| /api/repositories/{id}/collections | parentId (a collection GUID of the repository), limit | RepositoryCollectionNodeListDto: child fonds or opys with source counts and years |
+| /api/repositories/{id}/collections/{collectionId}/cases | limit | RepositoryCaseListDto: the first public sources of the collection |
 | /api/repositories/{id}/sources/export/csv | Repository GUID | text/csv |
 | /api/repositories/{id}/sources/export/jsonl | Repository GUID | newline-delimited JSON |
 
@@ -290,13 +297,14 @@ curl -sS "$BASE/api/repositories/$REPOSITORY_ID/sources/export/csv" \
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /api/collections | query, parentCollectionId, onlyMine, visibility, origin, sortBy, sortDirection, page, pageSize 1-100 | CollectionListResponse |
-| /api/collections/{id} | Collection GUID | CollectionDetailsDto |
-| /api/collections/{id}/sources | query, page, pageSize 1-100 | CollectionSourceMembersResponse |
-| /api/collections/{id}/children | scope=Direct|Descendants, query, page, pageSize 1-100 | CollectionListResponse |
+| /api/collections | query, parentCollectionId, onlyMine, visibility, origin, sortBy, sortDirection, page, pageSize 1-100, locale (orders a Title sort by that language's titles) | CollectionListResponse |
+| /api/collections/{id} | Collection GUID, locale | CollectionDetailsDto with parentCollectionChain and the automation's author and repository names |
+| /api/collections/{id}/sources | query, page, pageSize 1-100; view=rows with group=case\|year\|place and locale for slim rows | CollectionSourceMembersResponse (`rows` for view=rows) |
+| /api/collections/{id}/stats | Collection GUID | CollectionStatsDto: visible sources and child collections, year span, repositories, scanned pages (cached a few minutes) |
+| /api/collections/{id}/children | scope=Direct|Descendants, query, page, pageSize 1-100, locale | CollectionListResponse |
 | /api/collections/by-source/{sourceId} | page, pageSize 1-100 | Collections containing an accessible source |
 
-Visibility values are Public, Unlisted, Private. Origin values are Manual, Imported, SystemGenerated. Sort by CreatedAt, UpdatedAt, Title, or ItemCount; direction is Ascending or Descending. Supplying parentCollectionId, including an empty value, activates parent filtering.
+Visibility values are Public, Unlisted, Private. Origin values are Manual, Imported, SystemGenerated. Sort by CreatedAt, UpdatedAt, Title, or ItemCount; direction is Ascending or Descending. Titles sort with numbers compared as numbers ("Fund 127" before "Fund 1000"). Slim rows in `group=case` follow the reference code in the same natural order; `year` and `place` put rows without a year or place last. Collection lists name no owner accounts. Supplying parentCollectionId, including an empty value, activates parent filtering.
 
 onlyMine requires an authenticated identity; it never exposes another caller's private repository or collection.
 
@@ -306,6 +314,30 @@ curl -sS --get "$BASE/api/collections/$COLLECTION_ID/children" \
   --data-urlencode "page=1" \
   --data-urlencode "pageSize=25" | jq .
 ~~~
+
+## Record coverage by place
+
+Answer "which records survive for this place, and when" with the coverage endpoints, which read the
+source availability index (it fills a moment after a source is saved). Selections take 1-20
+repeated `placeId` (catalog place UUIDs from `/api/canonical-places?query=`), optional repeated
+`facet=root:value` (prefix `!` to exclude, for example `record-kind:census`) and
+`includePossible=true|false` (sources whose locations only name the place).
+
+| Endpoint | Parameters | Returns |
+|---|---|---|
+| /api/source-coverage/matrix | placeId..., facet..., includePossible | SourceCoverageMatrixDto: `decades`, one row per record kind (`code`, `counts` per decade, `before`, `after`, `undated`, `total`), `decadeTotals`, `distinctTotal`, `places` (per place `key`, `count`, `minYear`, `maxYear`, `kindCount`). Every number counts distinct sources; a source spanning decades counts in each decade but once in a row total. Cached for a minute |
+| /api/source-coverage/summary | placeId..., facet..., includePossible | Linked/possible totals, open-ended buckets and the facet vocabulary (record-kind names per language) |
+| /api/source-coverage/results | placeId..., repeated year (a decade is ten values) or bucket=before|after|undated, optional group=record-kind:... (omit for every kind), page, pageSize 1-100 | SourceCoverageResultsDto; items carry `firstYear`/`lastYear` clipped to the selected years, `pageCount`, `documentCount`, `digitised`, `hasEntries`; page 1 adds `placeCounts` |
+| /api/source-coverage/suggested-places | limit 1-12 | Catalog places with the most public coverage |
+| POST /api/source-coverage/export/csv | JSON: placeIds, locations, facets, includePossible, years or bucket or allFiniteYears | text/csv |
+
+An empty matrix cell means nothing is catalogued yet, not that the records were lost. A 503 means
+the index is rebuilding; retry after the `Retry-After` seconds.
+
+```bash
+curl -sS --get "$BASE/api/source-coverage/matrix" \
+  --data-urlencode "placeId=$PLACE_ID" | jq '{decades, rows: [.rows[] | {code, total}], distinctTotal}'
+```
 
 ## Rate limits and request pacing
 
@@ -333,9 +365,13 @@ OPENHERITAGE_PASSWORD, POST JSON fields username and password to
 jar, and verify GET /api/users/me before mutation.
 
 - Sources: POST /api/sources; PUT or DELETE /api/sources/{id}. Approval/rejection requires moderator access.
+- Coverage locations (and author locations, `PUT /api/authors/{id}` `locations`) keep the place name as the record writes it in `name`, with `canonicalPlaceId` when a gazetteer place is proven. A name that cannot be matched yet may join the shared "Places to match" queue: send `unresolved` `{area?, reason: ambiguous|vanished|renamed|other, candidates?: [placeId], note?}` on that location. Reads return its `unresolvedPlaceId`; send it back (or leave it out — the stored entry is kept while the name stays the same). A moderator's match later sets `canonicalPlaceId` and keeps `name` unchanged.
 - Documents: POST under a source; PATCH or DELETE a document; add/remove original files; report documents.
 - Pages: upload images/XML, complete upload sessions, reorder pages, set notes/transcriptions, or bulk-delete only with explicit intent.
 - Multipart uploads: create POST /api/source-documents/uploads; PUT numbered application/octet-stream parts starting at 1; complete or abort. Reuse the session and upload every part before completion.
 - Repositories and collections: create/update only owned or authorized records; link/unlink sources and child collections explicitly.
+- Collection titles and descriptions are multilingual: reads return `titleVersions` and `descriptionVersions` (`{tag: {text, kind: original|human|machine, by?, from?, inferred?}}`, the original first) beside `title`, `description` and the known `originalTitle`/`originalDescription`. On create or PUT, send versions with exactly one `original` (any BCP 47 tag; the API accepts Russian, as the original or as a human version beside another original — the interface and machine translation never create Russian translations) or the language → text fields with `originalTitle`/`originalDescription` naming the real original language — never key a title `uk` when it is not Ukrainian. Versions win when both are sent. A PUT that leaves out `originalTitle`, `originalDescription`, `description` or the versions, or sends an empty `title`, keeps what is stored; an empty `descriptionVersions` clears the description. Only moderators move a settled original.
+- Several sources into one collection: POST /api/collections/{id}/sources with `{"sourceIds": [...]}` (at most 500); the response lists `added`, `alreadyPresent` and `notFound`.
+- CSV of sources (signed in): POST /api/sources/export/csv with `{"sourceIds": [...]}`, or with the /api/sources filters (query, type, approvalStatus, repositoryId, visibility, hasDocuments, authorIds, hasLocationName, hasCoordinates, hasCanonicalPlace, hasNoLocation, sortBy, sortDesc) and no ids; at most 5,000 rows.
 
 For reads, correct malformed parameters on 400, authenticate only when needed on 401, stop on 403, verify IDs and visibility on 404, and honor rate limits on 429. On mutation 409, re-fetch and reconcile versions; on 422, correct validation. Logout when finished.

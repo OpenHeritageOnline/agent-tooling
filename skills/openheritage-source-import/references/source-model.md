@@ -108,7 +108,8 @@ uploader and not automatically the holding repository.
    authorized it, and the token has `api:authors`.
 
 Supported Source credit roles are `author`, `editor`, `compiler`, `translator`,
-`cartographer`, `photographer`, and `institutional-creator`. Use the smallest
+`cartographer`, `photographer`, `studio`, `collector`, `digitised-by`,
+`publisher`, and `institutional-creator`. Use the smallest
 evidenced set. `creditedAs` preserves the name or wording printed on the item;
 it does not replace the canonical Author name.
 
@@ -188,6 +189,36 @@ Descriptions are localized `{language,text}` values and should state factual
 provenance, completeness, gaps, and catalog context. Do not put passwords,
 tokens, private contact data, or unsupported conclusions in descriptions.
 
+## Language versions of the title and descriptions
+
+The title and descriptions each come twice: `title` (the original title's text)
+and `descriptions` (`{language,text}` of the original and human versions), and
+`titleVersions` and `descriptionVersions` with every version and its kind —
+`{ "uk": { "text": "…", "kind": "original" }, "en": { "text": "…", "kind": "human", "from": "uk" } }`.
+Tags are any well-formed BCP 47 tag (`uk`, `pl`, `la`, `yi-Latn`, `x-ruthen`),
+returned in canonical case. Exactly one version is the original. `inferred: true`
+marks a language guessed for a title or description saved before versions
+existed: the title's is the Source's first `languages` entry, else `uk`.
+`kind: machine` marks an unreviewed machine translation; never present it as a
+person's translation.
+
+To write languages explicitly, send `titleVersions` and `descriptionVersions`
+(they win over `title` and `descriptions`; `title` may then be empty). Send only
+`text`, `kind` (`original` or `human`) and optionally `from`; the server records
+who wrote each version. Rules: exactly one original per text; the API accepts Russian
+(`ru` and its variants) as the original, as written in the source, or as a human
+version beside another original (the interface and machine translation never
+create Russian translations); only moderators move an original that is settled. Names of people,
+places, archival references and quotations are written as printed, never
+translated.
+
+Sending only the older fields keeps working: a `title` that differs from what is
+stored replaces the original title's text and keeps its translations (a title
+sent back unchanged changes nothing); `descriptions` keeps the original of a
+language still sent and replaces the set of languages. On `PUT`, leaving
+`titleVersions` or `descriptionVersions` out (or null) keeps the stored
+versions.
+
 ## Source creation template
 
 Omit unresolved optional values instead of copying placeholders:
@@ -229,7 +260,7 @@ verify every resolved relationship. An empty `documents` array and
 `hasDocuments: false` are a successful Source-only result.
 
 For `PUT /api/sources/{id}`, fetch the Source first, include its `version`, and
-preserve descriptions, repository and reference links, coverage, origin date,
+preserve the title and descriptions with their versions, repository and reference links, coverage, origin date,
 languages, classifications, and Author credits outside the requested change.
 Omitted `languages`, `classificationTagIds`, or `authorCredits` may preserve
 existing values while empty arrays may clear them; follow the live schema and
