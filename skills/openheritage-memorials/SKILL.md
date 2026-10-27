@@ -46,6 +46,7 @@ authenticated reads, and all preservation workflows.
 | /api/memorials/search | q, cemId, cemName, lang, fromDate, toDate, yearFrom, yearTo, yearType, repeated givenName/surname, hasOcr, myOnly, needsOcr, hasPhoto, coordinateFilter, sortBy, sortDir, skip, take 1-100 | MemorialSearchResponseDto |
 | /api/memorials/search/paginated | Same filters and sorting as search, plus repeated coordinateFilter and people, birthFrom, birthTo, deathFrom, deathTo, match, page and pageSize 1-100 | MemorialPageResponseDto with compact MemorialListItemDto items |
 | /api/memorials/search/facets | The search/paginated filters, without sorting or paging | MemorialSearchFacetsDto: counts beside each filter option |
+| /api/memorials/recent | cursor (the previous page's nextCursor), hasPhoto, lang, limit 1-100 (default 20) | MemorialFeedPageDto: compact MemorialListItemDto items newest first and nextCursor (null on the last page); no totals, so use it for the newest memorials and endless scrolling |
 | /api/memorials/{id} | Memorial GUID | MemorialDto; 308 when merged |
 | /api/memorials/{id}/preview | Memorial GUID | WebP primary-image thumbnail |
 | /api/memorials/{id}/export/csv | Memorial GUID | The memorial's people as text/csv in plaque order; 404 for hidden memorials |
