@@ -2,7 +2,7 @@
 name: openheritage-archives
 description: Search and read OpenHeritage sources, documents, files, pages, XML, table entries, repositories, collections, and exports. Sources may originate from archives, museums, libraries, publications, personal collections, websites, or other providers. Use for source discovery, record coverage, document browsing, repository holdings, and collection hierarchies. Use openheritage-source-import for generic ingestion and openheritage-newspaper-import for complete newspaper issues.
 metadata:
-  version: 1.10.0
+  version: 1.11.0
 ---
 
 # OpenHeritage Sources and Documents
@@ -333,6 +333,12 @@ repeated `placeId` (catalog place UUIDs from `/api/canonical-places?query=`), op
 
 An empty matrix cell means nothing is catalogued yet, not that the records were lost. A 503 means
 the index is rebuilding; retry after the `Retry-After` seconds.
+
+The same data is the people-facing metrical books catalogue at `/{locale}/sources/coverage`. When a
+user asks where to find metrical books, parish registers or other records for a village, link it:
+`?placeId={uuid}` (repeatable) opens a catalog place, and `?q={settlement name}` types the name into
+its place search and chooses the place when the catalog has exactly one match. The short links
+`/metrical-books/{settlement}` and `/catalog/{settlement}` redirect there with `q` set.
 
 ```bash
 curl -sS --get "$BASE/api/source-coverage/matrix" \

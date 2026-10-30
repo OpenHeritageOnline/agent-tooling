@@ -2,7 +2,7 @@
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.13.0
+  version: 3.14.0
 ---
 
 # OpenHeritage
@@ -11,7 +11,7 @@ Use this umbrella skill for cross-domain discovery. Switch to the focused skill 
 
 | Skill | Use for |
 |---|---|
-| openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, exports |
+| openheritage-archives | Sources, documents, repositories, collections, files, pages, XML, entries, exports; which metrical books and records survive for a place (the metrical books catalogue) |
 | openheritage-source-import | Catalog-only Sources, repository references, Authors, tags, coverage, optional SourceDocuments and files |
 | openheritage-newspaper-import | Complete newspaper issue preparation, cataloguing, automated collections, page uploads, PAGE XML, verification, and repair |
 | openheritage-photos | Historical photos, media variants, photo maps, corrections, people on photos |
