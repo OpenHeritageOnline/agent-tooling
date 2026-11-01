@@ -38,7 +38,9 @@ schema because availability and permissions may differ by environment.
 Before POST, search `GET /api/sources` with the narrowest useful title query and
 compare complete candidates. When a repository reference exists, also query
 `GET /api/sources/repository-links` with `repositoryId`, `referenceCode`, URL,
-or `referenceType` as appropriate.
+or `referenceType` as appropriate. Repeat `referenceCode` (up to 100) to check a
+batch in one request: any listed code matches, and `limit` (1-100, default 20)
+applies to each code. Codes match exactly and case-sensitively.
 
 Compare:
 
@@ -78,7 +80,7 @@ A repository link represents a held physical or digital representation:
 - Use `archive-signature` for archival hierarchy codes, `dgs` for a FamilySearch DGS number, `call-number` for library or storage call numbers, or `other` only when evidence does not fit a more specific live option.
 - Use `physical`, `digital`, or `hybrid` for access according to the representation actually held.
 - Mark the best representation as primary; do not mark several links primary without a real reason.
-- Set `enforceUniqueReferenceCode` only when the selected repository treats that code as unique. A 409 requires duplicate review, not a retry with uniqueness disabled.
+- Set `enforceUniqueReferenceCode` only when the selected repository treats that code as unique. The check runs on create only and compares the code exactly (case-sensitive) within that repository. A duplicate answers 409 with `code: duplicate_reference_code` and, when you may see the existing source, its id in `existingSourceId`; review that source instead of retrying with uniqueness disabled.
 - A repository may restrict allowed URL hosts. Use the item URL on the repository's verified host, not an unrelated mirror or search-result URL.
 
 If the holding repository is unknown, omit `repositoryLinks` and report the
@@ -199,13 +201,17 @@ Tags are any well-formed BCP 47 tag (`uk`, `pl`, `la`, `yi-Latn`, `x-ruthen`),
 returned in canonical case. Exactly one version is the original. `inferred: true`
 marks a language guessed for a title or description saved before versions
 existed: the title's is the Source's first `languages` entry, else `uk`.
+Editing that text under the same language keeps the guess (`by` names the
+editor); moving the original to another language, or sending
+`"inferred": false` on it, states the language. Send `false` only when the
+language is actually known.
 `kind: machine` marks an unreviewed machine translation; never present it as a
 person's translation.
 
 To write languages explicitly, send `titleVersions` and `descriptionVersions`
 (they win over `title` and `descriptions`; `title` may then be empty). Send only
-`text`, `kind` (`original` or `human`) and optionally `from`; the server records
-who wrote each version. Rules: exactly one original per text; the API accepts Russian
+`text`, `kind` (`original` or `human`), optionally `from`, and `inferred: false`
+to confirm a guessed language; the server records who wrote each version. Rules: exactly one original per text; the API accepts Russian
 (`ru` and its variants) as the original, as written in the source, or as a human
 version beside another original (the interface and machine translation never
 create Russian translations); only moderators move an original that is settled. Names of people,
@@ -259,9 +265,20 @@ Create with `POST /api/sources`. Read `GET /api/sources/{id}` afterward and
 verify every resolved relationship. An empty `documents` array and
 `hasDocuments: false` are a successful Source-only result.
 
-For `PUT /api/sources/{id}`, fetch the Source first, include its `version`, and
-preserve the title and descriptions with their versions, repository and reference links, coverage, origin date,
-languages, classifications, and Author credits outside the requested change.
-Omitted `languages`, `classificationTagIds`, or `authorCredits` may preserve
-existing values while empty arrays may clear them; follow the live schema and
-never rely on omission semantics from memory.
+To change an existing Source, use `PATCH /api/sources/{id}` with the `version`
+you read and only the fields to change, e.g. `{"version": 4, "title": "…"}`.
+Everything left out keeps what is stored; an array you send replaces that set
+(`[]` clears it). A stale `version` is 409: re-read and reapply.
+
+`PUT /api/sources/{id}` replaces the whole Source. Left out on `PUT`,
+`repositoryLinks`, `referenceLinks`, `coverageSegments` and `descriptions` are
+cleared, `visibility` becomes `public`, and a missing `version` skips the
+concurrency check; omitted `titleVersions`, `descriptionVersions`, `languages`,
+`classificationTagIds`, `authorCredits` and `originDate` keep what is stored.
+Use `PUT` only when you mean to send the complete Source.
+
+Edits and review: the creator and source moderators may edit a Source in any
+status; other accounts only a `Pending`, `public` `archive-case` Source, without
+changing type or visibility. When an account that cannot approve sources
+changes an `Approved` or `Rejected` Source, it goes back to `Pending` for review.
+A request that changes nothing saves nothing (no new `version`).

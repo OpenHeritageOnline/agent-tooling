@@ -48,7 +48,9 @@ newspaper authority,
 `api:sources` for issue Sources and the automated Collection, and
 `api:documents` for the issue document, page images, metadata, and PAGE XML.
 Standalone clipping PhotoAssets follow `openheritage-photos`. Never send a
-personal token to MCP: MCP is anonymous and read-only.
+personal token to MCP: MCP is anonymous and read-only by design, so it never
+sees private records or knows the caller; to find your own records use REST with
+a token (`onlyMine=true`).
 
 ~~~bash
 curl -sS -H "Authorization: Bearer $OPENHERITAGE_API_TOKEN" \
@@ -57,7 +59,19 @@ curl -sS -H "Authorization: Bearer $OPENHERITAGE_API_TOKEN" \
 
 Do not print, persist, or pass the token in a URL. A 401 means the bearer token
 is missing or invalid; a 403 means it lacks the operation's required scope or
-the caller lacks record-level authority.
+the caller lacks record-level authority. Every platform error is Problem Details
+(`application/problem+json`) with a stable `code` and a `correlationId` (also in
+the `X-Correlation-ID` header); quote the correlation id when reporting a fault.
+A 403 without them, such as a Cloudflare page with `error code: 1010`, is a
+network block of the client, not a missing permission: send a descriptive
+`User-Agent` naming the client and a contact (library defaults can be blocked)
+and try once more.
+
+`GET /api/users/me/identity` (any token, `api:read`) returns the caller's
+`userId`, `displayName`, `userName` and, for a token, its `id`, `name`,
+`scopes` and `expiresAt`. The `userId` is the `createdByUserId` of the records
+the caller creates; list them with `onlyMine=true` on `/api/sources` and
+`/api/source-documents`.
 
 ## MCP public search
 
@@ -194,7 +208,7 @@ GET /api/search is anonymous federated lexical or hybrid search.
 | Parameter | Rules |
 |---|---|
 | q | Required non-empty query |
-| entityTypes | Repeatable filter: source, document, page, entry, memorial-person, memorial-placeholder, cemetery, research, collection, person, photo-asset, author |
+| entityTypes | Repeatable filter, singular and lowercase: source, document, page, entry, memorial-person, cemetery, research, collection, person, photo-asset, author, repository, canonical-place, glossary-concept. Any other value (`sources`, `Source`) is 400 |
 | documentId, sourceId | Optional string IDs narrowing document-related hits |
 | page | One-based; values below 1 become 1 |
 | pageSize | Clamped to 1-100 |
@@ -271,6 +285,9 @@ curl -sS -c "$COOKIE_JAR" -X POST "$BASE/api/users/login-password" \
 curl -sS -b "$COOKIE_JAR" "$BASE/api/users/me" | jq .
 ~~~
 
+`/api/users/me` (the full profile, with e-mail and linked accounts) answers a
+session only; a personal token uses `/api/users/me/identity`.
+
 Logout after authenticated work:
 
 ~~~bash
@@ -289,9 +306,9 @@ curl -sS -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
 
 ## Errors
 
-- 400: correct malformed or missing parameters.
+- 400: correct malformed or missing parameters; `errors` names each parameter. A parameter *name* an operation does not know is ignored, not refused, so check names against the OpenAPI document.
 - 401: authenticate again only when the requested route requires it.
-- 403: stop; the caller lacks access.
+- 403: stop; the caller lacks access. A 403 without `code` and `correlationId` came from the network edge, not the platform (see Personal API above).
 - 404: confirm the ID or accept that visibility may intentionally conceal a record.
 - 409: reconcile version, duplicate, or state conflicts; never blind-retry.
 - 422: correct validation details.
