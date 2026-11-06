@@ -2,7 +2,7 @@
 name: openheritage-catalog-review
 description: Review existing OpenHeritage Sources and canonical places on behalf of a signed-in member and correct or complete them from evidence — coverage dates and places, classification tags, repository references, translations, place names, parents and identifiers — with the member's Personal API token. Use when a member asks their agent to check, fix or backfill catalogue records. Use openheritage-source-import to create new Sources and openheritage-archives for read-only research.
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # OpenHeritage Catalog Review
@@ -46,7 +46,7 @@ UA="User-Agent: <agent-name>/<version> (catalog review)"
 | Record | Your agent may write | Otherwise |
 |---|---|---|
 | Sources the member created | any field except as below | — |
-| Other members' `archive-case` Sources that are `public` and `Pending` or `Approved` | content fields; never `type` or `visibility` | 403: report it |
+| Other members' `archive-case` Sources that are `public` and `Pending` or `Approved` | content fields; never `type` or `visibility` | 403 `source_not_editable`: report it |
 | `Rejected`, private, limited or non-public Sources of others; other Source types | nothing | report the proposed correction |
 | Canonical places | names, types, parents, point, existence dates, external ids, reference links | merges, deletions, verification: report for moderators |
 
@@ -159,8 +159,10 @@ curl -sS --get "$BASE/api/sources" -H "$AUTH" -H "$UA" \
 
 Stop writing and ask the member when:
 
-- 401, or 403 on a record you expected to be editable (the rights changed or
-  the token lacks a scope);
+- 401, or 403 on a record you expected to be editable. A 403 with code
+  `source_not_editable` states what members may edit: report that record and
+  go on with the next. Any other 403 means the token lacks a scope or was
+  revoked: stop;
 - several candidates fit a place, an archive or a duplicate Source;
 - the evidence contradicts what another member wrote recently (a revision of
   the last weeks): report it rather than overwrite;
