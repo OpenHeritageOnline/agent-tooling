@@ -278,7 +278,8 @@ concurrency check; omitted `titleVersions`, `descriptionVersions`, `languages`,
 Use `PUT` only when you mean to send the complete Source.
 
 Edits and review: the creator and source moderators may edit a Source in any
-status; other accounts only a `Pending`, `public` `archive-case` Source, without
-changing type or visibility. When an account that cannot approve sources
+status; other accounts a `public` `archive-case` Source that is `Pending` or
+`Approved` (not `Rejected`), without changing type or visibility. A Personal
+API token always edits as a plain member, even when its owner moderates. When an account that cannot approve sources
 changes an `Approved` or `Rejected` Source, it goes back to `Pending` for review.
 A request that changes nothing saves nothing (no new `version`).

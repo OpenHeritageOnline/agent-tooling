@@ -1,8 +1,8 @@
 ---
 name: openheritage-source-import
-description: Create and verify OpenHeritage Sources as catalog or repository-reference records, and optionally ingest SourceDocuments, original files, ordered page images, and PAGE XML. Use for authorized generic source imports with repository provenance, authors, classification tags, coverage dates, and places. Use openheritage-newspaper-import for complete newspaper issues.
+description: Create and verify OpenHeritage Sources as catalog or repository-reference records, and optionally ingest SourceDocuments, original files, ordered page images, and PAGE XML. Use for authorized generic source imports with repository provenance, authors, classification tags, coverage dates, and places. Use openheritage-newspaper-import for complete newspaper issues and openheritage-catalog-review to correct existing Sources.
 metadata:
-  version: 1.4.0
+  version: 1.4.1
 ---
 
 # OpenHeritage Source Import
