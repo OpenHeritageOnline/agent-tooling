@@ -300,7 +300,7 @@ curl -sS "$BASE/api/repositories/$REPOSITORY_ID/sources/export/csv" \
 | /api/collections | query, parentCollectionId, onlyMine, visibility, origin, sortBy, sortDirection, page, pageSize 1-100, locale (orders a Title sort by that language's titles) | CollectionListResponse |
 | /api/collections/{id} | Collection GUID, locale | CollectionDetailsDto with parentCollectionChain and the automation's author and repository names |
 | /api/collections/{id}/sources | query, page, pageSize 1-100; view=rows with group=case\|year\|place and locale for slim rows | CollectionSourceMembersResponse (`rows` for view=rows) |
-| /api/collections/{id}/stats | Collection GUID | CollectionStatsDto: visible sources and child collections, year span, repositories, scanned pages (cached a few minutes) |
+| /api/collections/{id}/stats | Collection GUID | CollectionStatsDto: visible sources and child collections, year span, repositories, scanned pages. Public figures are counted in the background and can lag an edit; `pending: true` means not counted yet (counts 0, no years) |
 | /api/collections/{id}/children | scope=Direct|Descendants, query, page, pageSize 1-100, locale | CollectionListResponse |
 | /api/collections/by-source/{sourceId} | page, pageSize 1-100 | Collections containing an accessible source |
 
