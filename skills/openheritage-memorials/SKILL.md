@@ -141,7 +141,7 @@ Do not aggregate leaderboard or contribution-history results into contributor pr
 | /api/cemeteries/admin-hierarchy-facets | None | Cached level-1 and level-2 filter facets |
 | /api/cemeteries/{id} | Cemetery GUID | CemeteryDto; 308 when merged |
 | /api/cemeteries/{id}/statistics | Cemetery GUID | CemeteryStatisticsDto |
-| /api/cemeteries/{id}/surname-statistics | Cemetery GUID | Surname counts and gender breakdown |
+| /api/cemeteries/{id}/surname-statistics | Cemetery GUID, optional lang locale | Surname counts and gender breakdown; 202 with [] while being counted. Surnames are in lang where they have a name there, otherwise as written on the memorials; variants keep every spelling |
 | /api/cemeteries/validate-external-reference | required url | ExternalReferenceValidationResponseDto |
 | /api/cemeteries/{id}/export/csv | Cemetery GUID | Public memorials as text/csv, one row per person |
 | /api/cemeteries/{id}/export/jsonl | Cemetery GUID | Public memorials as application/x-ndjson |

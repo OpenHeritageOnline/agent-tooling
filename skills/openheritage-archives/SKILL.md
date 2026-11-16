@@ -74,9 +74,12 @@ soon as you have the answer:
    filters: it is structured and usually cheaper than reading pages.
 3. **Read page metadata to navigate.** `GET .../pages` returns every active
    page in order with `pageNo`, `pageKey`, `metadata.title`,
-   `metadata.description`, `note`, `currentImage` (size and dimensions) and the
-   full `transcription`. For a long document, project only what you need
-   instead of keeping the whole response:
+   `metadata.description`, `note`, `currentImage` (size and dimensions) and a
+   `transcription` without its text: `transcription` is present when the page
+   has text, with its `source`, but `fullText` is empty and `zones` is empty.
+   Add `?includeText=true` only when you need the text of many pages at once;
+   for a long document that response runs to megabytes. Project only what you
+   need instead of keeping the whole response:
 
    ~~~bash
    DOC="$BASE/api/sources/$SOURCE_ID/documents/$DOCUMENT_ID"
@@ -84,7 +87,8 @@ soon as you have the answer:
      title: (.metadata.title // [] | map(.text) | join(" / ")),
      note: .note.text,
      hasImage: (.currentImage != null),
-     textChars: (.transcription.fullText // "" | length)}]'
+     hasText: (.transcription != null),
+     textSource: .transcription.source}]'
    ~~~
 
    Page titles often name the section, year, parish or register part, so use
@@ -213,7 +217,7 @@ Use the base path /api/sources/{sourceId}/documents/{documentId}.
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /pages | None | DocumentPageDto[] |
+| /pages | Optional includeText=true (the text of every page; large) | DocumentPageDto[], transcription text left out by default |
 | /pages/{pageKey} | Page key | DocumentPageDto |
 | /pages/{pageKey}/image | Optional versionId; optional single Range header | Original page image, 200/206 |
 | /pages/number/{pageNo}/preview | One-based page number | WebP preview |
