@@ -97,6 +97,13 @@ After all pages are present, list them and reorder only when the returned order
 differs from the complete intended key list. Never bulk-delete or replace pages
 as part of an ordinary retry.
 
+Uploading, reserving, reordering and deleting pages need the right to edit the
+document: its creator or a moderator. An import account that did not create the
+document gets 403 and must not retry; report it instead. For a document of
+thousands of pages read `GET .../page-outline` (one small row per page, in
+order) rather than the full page list, and pass `"returnPages": false` to
+`/pages/reorder`.
+
 ## PAGE XML and derived text
 
 Use the schema version accepted by the live endpoint. Coordinates must match

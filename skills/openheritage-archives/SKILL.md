@@ -79,7 +79,11 @@ soon as you have the answer:
    has text, with its `source`, but `fullText` is empty and `zones` is empty.
    Add `?includeText=true` only when you need the text of many pages at once;
    for a long document that response runs to megabytes. Project only what you
-   need instead of keeping the whole response:
+   need instead of keeping the whole response. When `pageCount` is in the
+   thousands (a box of cards can hold tens of thousands of pages), start from
+   `GET .../page-outline` instead: one small row per active page in page order
+   (`pageKey`, `hasImage`, `fileName`; a row's page number is its position plus
+   one), then read single pages by key.
 
    ~~~bash
    DOC="$BASE/api/sources/$SOURCE_ID/documents/$DOCUMENT_ID"
@@ -218,10 +222,11 @@ Use the base path /api/sources/{sourceId}/documents/{documentId}.
 | Anonymous GET | Parameters | Response |
 |---|---|---|
 | /pages | Optional includeText=true (the text of every page; large) | DocumentPageDto[], transcription text left out by default |
+| /page-outline | None | PageOutlineRowDto[] in page order: pageKey, hasImage, fileName, imageRotation. Use it for documents of thousands of pages |
 | /pages/{pageKey} | Page key | DocumentPageDto |
 | /pages/{pageKey}/image | Optional versionId; optional single Range header | Original page image, 200/206 |
 | /pages/number/{pageNo}/preview | One-based page number | WebP preview |
-| /pages/{pageKey}/preview | Page key | WebP preview |
+| /pages/{pageKey}/preview | Page key; optional r=90, 180 or 270 | WebP preview, upright unless r names the turn. Pass the page's `imageRotation` as r when it is not 0 |
 | /pages/{pageKey}/display | Page key | JPEG display derivative; 404 means fall back to /image |
 | /pages/{pageKey}/xml | Optional versionId | application/xml |
 | /entries | page, pageSize; repeated sort=column:asc|desc; repeated filter=column:pattern | DocumentEntryPagedResponseDto |
@@ -377,7 +382,10 @@ jar, and verify GET /api/users/me before mutation.
 - Sources: POST /api/sources; PATCH /api/sources/{id} with `version` and only the fields to change (preferred), PUT to replace the whole Source (arrays left out are cleared), DELETE /api/sources/{id}. Approval/rejection requires moderator access; a non-moderator's change to an Approved or Rejected Source returns it to Pending. Besides the creator and moderators, any signed-in member may correct a `public` `archive-case` Source that is Pending or Approved, without changing its type or visibility; to review and correct Sources and places for a member, use `openheritage-catalog-review`.
 - Coverage locations (and author locations, `PUT /api/authors/{id}` `locations`) keep the place name as the record writes it in `name`, with `canonicalPlaceId` when a gazetteer place is proven. A name that cannot be matched yet may join the shared "Places to match" queue: send `unresolved` `{area?, reason: ambiguous|vanished|renamed|other, candidates?: [placeId], note?}` on that location. Reads return its `unresolvedPlaceId`; send it back (or leave it out — the stored entry is kept while the name stays the same). A moderator's match later sets `canonicalPlaceId` and keeps `name` unchanged.
 - Documents: POST under a source; PATCH or DELETE a document; add/remove original files; report documents.
-- Pages: upload images/XML, complete upload sessions, reorder pages, set notes/transcriptions, or bulk-delete only with explicit intent.
+- Pages: upload images/XML, complete upload sessions, reserve pages, reorder pages, or bulk-delete only with explicit intent. These change the document's page set and are allowed to the document's creator and to moderators only; anyone else gets 403. Notes and transcriptions (`PUT .../note`, `PUT .../transcription`) stay open to signed-in members.
+- A page scanned on its side is turned, not re-uploaded: `POST .../pages/rotate` with `{"pageKeys": [...], "quarterTurns": 1}` (1 right, -1 left, 2 upside down) adds to each page's rotation, reported as `imageRotation` (0, 90, 180, 270) on the page and in the outline. The image file, `/image`, `/display` and PAGE XML coordinates stay as uploaded; viewers turn the picture. The call is not repeatable: sent twice it turns twice, so after a lost answer read `imageRotation` instead of retrying. OCR reads a turned page as shown; to read turned pages again, run document OCR with `"pageKeys": [...]` (pages already read the same way at their present rotation are not read or charged again).
+- To split a document (one film roll holding several archive cases), `POST .../pages/move` with `{"pageKeys": [...], "targetDocumentId": "..."}` moves at most 5,000 pages per request to the end of another document, under any source; create the target document first (POST under its source) when it is new. You need edit rights on both. The answer lists the pages' keys in the target (`targetPageKeys`; a key the target already used gets a suffix such as `0003-2`). Transcriptions and OCR attempts go with the pages; sending the same request again after a lost answer finishes the move without duplicating pages. `GET .../pages/{pageKey}/moved-to` on the old document says where a moved page is now.
+- `PUT .../pages/reorder` takes every active page key in the wanted order; send `"returnPages": false` unless you need the full page list back. `POST .../pages/bulk-delete` is a soft delete: the pages keep their files, text and old numbers, and `POST .../pages/restore` with the same `pageKeys` puts them back where they were (keys that are active again are skipped). A 409 means another request is renumbering the document's pages: nothing was changed, wait a moment and send the same request again.
 - Multipart uploads: create POST /api/source-documents/uploads; PUT numbered application/octet-stream parts starting at 1; complete or abort. Reuse the session and upload every part before completion.
 - Repositories and collections: create/update only owned or authorized records; link/unlink sources and child collections explicitly.
 - Collection titles and descriptions are multilingual: reads return `titleVersions` and `descriptionVersions` (`{tag: {text, kind: original|human|machine, by?, from?, inferred?}}`, the original first) beside `title`, `description` and the known `originalTitle`/`originalDescription`. On create or PUT, send versions with exactly one `original` (any BCP 47 tag; the API accepts Russian, as the original or as a human version beside another original — the interface and machine translation never create Russian translations) or the language → text fields with `originalTitle`/`originalDescription` naming the real original language — never key a title `uk` when it is not Ukrainian. Versions win when both are sent. A PUT that leaves out `originalTitle`, `originalDescription`, `description` or the versions, or sends an empty `title`, keeps what is stored; an empty `descriptionVersions` clears the description. Only moderators move a settled original.
