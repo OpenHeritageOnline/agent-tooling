@@ -137,7 +137,7 @@ Do not aggregate leaderboard or contribution-history results into contributor pr
 
 | Anonymous GET | Parameters | Response |
 |---|---|---|
-| /api/cemeteries/search | query, skip, take 1-100, latitude, longitude, radiusKm, hasMemorials, hasLocation, missingOsm, missingUkName, missingAddr, comma-separated adminLevel1/adminLevel2, swLat/swLng/neLat/neLng (all four or none), sortBy, sortDirection | CemeterySearchResponseDto |
+| /api/cemeteries/search | query, skip, take 1-100, latitude, longitude, radiusKm, hasMemorials, hasLocation, missingOsm, missingUkName, missingAddr, comma-separated adminLevel1/adminLevel2, swLat/swLng/neLat/neLng (all four or none), sortBy, sortDirection, disappeared | CemeterySearchResponseDto |
 | /api/cemeteries/admin-hierarchy-facets | None | Cached level-1 and level-2 filter facets |
 | /api/cemeteries/{id} | Cemetery GUID | CemeteryDto; 308 when merged |
 | /api/cemeteries/{id}/statistics | Cemetery GUID | CemeteryStatisticsDto |
@@ -148,6 +148,8 @@ Do not aggregate leaderboard or contribution-history results into contributor pr
 | /api/cemeteries/{id}/poster.pdf | Optional locale | Printable A4 application/pdf |
 
 sortBy is Name, CreatedDate, MemorialCount, or Distance. sortDirection is Ascending or Descending. Supply latitude, longitude, and radiusKm together for geographic search. The four viewport corners keep cemeteries whose centre lies inside them, and, for a viewport at most 2 degrees each way, those whose stored boundary crosses it, and, at most 0.5 degrees each way, those with a drawable memorial inside it, so a view from inside a large cemetery still names it (a partial, out-of-range or inverted set is a 400 problem with code validation_failed); hasLocation=true keeps cemeteries with a centre point, false those without.
+
+Some cemeteries no longer exist (ploughed into fields, built over): CemeteryDto and search results carry disappeared (true for those), existedFrom and existedUntil (date expressions {type, value}; either null when unknown, for any cemetery), and CemeteryDto carries tracedFromMap {id, title} when the drawn outline of a disappeared cemetery was traced from a public historical map (title empty once that map is no longer public). The outline of a disappeared cemetery is its geometry, a Polygon or MultiPolygon. disappeared on search is Any (default), Only, Exclude or ExactOnly; a nearest-first search around a point with no query and no disappeared value leaves disappeared cemeteries out, and ExactOnly (what upload pickers send) keeps existing cemeteries and finds a disappeared one only by its id, its page address or one of its names in full. Never place a memorial photo in a disappeared cemetery unless the person says it is a surviving or relocated headstone from it: position-based matching never picks one.
 
 CemeterySearchResponseDto also carries totalMemorialCount, the memorials held by every matching cemetery (null in older payloads).
 
@@ -168,7 +170,7 @@ curl -sS -L "$BASE/api/cemeteries/$CEMETERY_ID/poster.pdf?locale=uk" \
 
 ## Cemetery map and photos
 
-GET /api/cemeteries/map accepts required swLat, swLng, neLat, neLng plus zoom default 11 and includeGeometry default false. It returns cemeteries whose centre lies in the bounds and, for bounds at most 2 degrees each way, those whose boundary crosses them. Zoom is clamped to 0-22; low zoom returns clusters and high zoom returns individual cemeteries. Geometry increases payload size. hasMemorials=true keeps only cemeteries that hold memorials, and a comma-separated adminLevel1 keeps only those countries.
+GET /api/cemeteries/map accepts required swLat, swLng, neLat, neLng plus zoom default 11 and includeGeometry default false. It returns cemeteries whose centre lies in the bounds and, for bounds at most 2 degrees each way, those whose boundary crosses them. Zoom is clamped to 0-22; low zoom returns clusters and high zoom returns individual cemeteries. Geometry increases payload size. hasMemorials=true keeps only cemeteries that hold memorials (and those that no longer exist), a comma-separated adminLevel1 keeps only those countries, and disappeared=only or disappeared=exclude keeps only cemeteries that no longer exist or only those that do.
 
 The response is CemeteryMapResponseDto.
 
@@ -209,6 +211,7 @@ Set OPENHERITAGE_USERNAME and OPENHERITAGE_PASSWORD only for protected work. POS
 - Prefer incremental transcription endpoints for a person or note. Full PUT is a replacement and must preserve all existing people, notes, references and images; a note sent back with unchanged text keeps its source (OCR, import) and date, a new or rewritten one becomes the editor's. In PUT, title and monument null keep the current value and an empty array clears it; each person's relationship, rank and needsChecking are replaced with what is sent.
 - To transcribe one particular memorial, POST /api/platform-tasks/claim with taskType MemorialTranscription and parameters {"memorialId": "<GUID>"}. It claims that memorial's task or fails with 404 platform-task.no-tasks-available when the memorial has no photo, is already transcribed or under review, is held by someone else, or was uploaded by the caller (who edits it instead). The transcription is applied only after review.
 - Cemetery creation requires authentication; cemetery updates and cemetery-photo changes require cemetery moderator/admin roles.
+- To record a cemetery that no longer exists, POST /api/cemeteries with disappeared true, boundary {parts: [[[lng, lat], ...], ...]} (one open outer ring per part, at most 20 parts of at most 500 positions, 2 km² in all, parts not overlapping), optional existedFrom/existedUntil date expressions, tracedFromMapId (a public historical map) and description (in language); the position is taken from the outline. Rejected values answer 400 validation_failed with messages under boundary, existedFrom, existedUntil or tracedFromMapId. An update takes the same fields plus clearExistedFrom, clearExistedUntil, clearTracedFromMap and disappeared true/false (null keeps it); a boundary is accepted only while the cemetery no longer exists.
 - External reference changes, image changes, markers, merges and splits require explicit intent and current-state inspection.
 
 For reads, correct malformed parameters on 400, authenticate only when needed on 401, stop on 403, verify IDs or redirects on 404, and honor rate limits on 429. On mutation 409, re-fetch and reconcile; on 422, correct validation. Logout after mutations.
