@@ -2,7 +2,7 @@
 name: openheritage
 description: Discover public genealogy records across OpenHeritage with global search and safe links to user-facing profile pages. Use for broad searches spanning archives, photos, memorials, cemeteries, canonical places, collections, researches, authors, or people, and to choose a focused OpenHeritage skill.
 metadata:
-  version: 3.15.0
+  version: 3.15.1
 ---
 
 # OpenHeritage
@@ -39,7 +39,8 @@ Use the Personal API for user-authorized contributions. Its interactive
 documentation is at `https://openheritage.online/api-docs`, and the OpenAPI 3
 document is at `https://openheritage.online/api/openapi/v1.json`. Read the live
 operation schema, `x-api-required-scopes`, and multipart field names before a
-mutation instead of guessing a request shape.
+mutation instead of guessing a request shape. The JSON URL redirects to the
+current versioned copy: follow redirects (`curl -sSL`).
 
 Personal API tokens are bearer tokens and always include `api:read`. Add only
 the write scopes needed for the requested work. Generic Source creation and

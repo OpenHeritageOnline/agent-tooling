@@ -2,7 +2,7 @@
 name: openheritage-newspaper-import
 description: Prepare, catalog, OCR, import, repair, and verify complete scanned newspaper issues in OpenHeritage. Use for issue-level publication Sources, newspaper organization authors, automated year collections, repository and publication-place provenance, ordered document pages, PAGE XML, and resumable imports. Do not use for standalone newspaper clipping PhotoAssets.
 metadata:
-  version: 1.2.0
+  version: 1.2.1
 ---
 
 # OpenHeritage Newspaper Import
@@ -16,7 +16,7 @@ deliverable is a standalone clipping PhotoAsset.
 
 - Treat original scans as immutable. Hash them before processing and make normalized working copies in a separate directory.
 - Before any mutation, confirm the target environment, holding repository when known, rights declaration, visibility, issue granularity, and publication-place evidence.
-- Read the live Personal API at `$BASE/api-docs` and `$BASE/api/openapi/v1.json`; verify operation schemas, multipart fields, limits, and `x-api-required-scopes` instead of relying on examples alone.
+- Read the live Personal API at `$BASE/api-docs` and `$BASE/api/openapi/v1.json`; verify operation schemas, multipart fields, limits, and `x-api-required-scopes` instead of relying on examples alone. The JSON URL redirects to the current versioned copy: follow redirects (`curl -sSL`).
 - A full import normally needs `api:authors`, `api:sources`, and `api:documents` in addition to the token's `api:read`. Never send a Personal API token to MCP or put it in a URL, file, log, or report.
 - Resolve every taxonomy, author, collection, repository, and canonical-place ID in the target environment. Never copy an ID from an example or another environment.
 - Never delete an existing page image or XML version during import or repair. Upload a new version and preserve the audit trail.

@@ -2,7 +2,7 @@
 name: openheritage-source-import
 description: Create and verify OpenHeritage Sources as catalog or repository-reference records, and optionally ingest SourceDocuments, original files, ordered page images, and PAGE XML. Use for authorized generic source imports with repository provenance, authors, classification tags, coverage dates, and places. Use openheritage-newspaper-import for complete newspaper issues and openheritage-catalog-review to correct existing Sources.
 metadata:
-  version: 1.4.1
+  version: 1.4.2
 ---
 
 # OpenHeritage Source Import
@@ -22,7 +22,7 @@ publication-authority setup, automated year collections, and newspaper OCR.
 
 ## Authorization and live contracts
 
-- Read the live Personal API at `$BASE/api-docs` and `$BASE/api/openapi/v1.json` before mutation. It is authoritative for request schemas, multipart fields, limits, and `x-api-required-scopes`.
+- Read the live Personal API at `$BASE/api-docs` and `$BASE/api/openapi/v1.json` before mutation. It is authoritative for request schemas, multipart fields, limits, and `x-api-required-scopes`. The JSON URL redirects to the current versioned copy: follow redirects (`curl -sSL`).
 - Source-only creation requires `api:sources`; document creation or upload also requires `api:documents`; creating or updating an Author additionally requires `api:authors`. Personal API tokens already include `api:read`.
 - Send a token only as `Authorization: Bearer $OPENHERITAGE_API_TOKEN`. Never put it in a URL, file, log, checkpoint, or report, and never send it to MCP.
 - Creating repositories, taxonomy tags, or canonical places is outside this workflow unless the user separately requests and authorizes it. Link existing records or retain conservative unresolved data.

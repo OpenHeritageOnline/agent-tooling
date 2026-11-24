@@ -2,7 +2,7 @@
 name: openheritage-catalog-review
 description: Review existing OpenHeritage Sources and canonical places on behalf of a signed-in member and correct or complete them from evidence — coverage dates and places, classification tags, repository references, translations, place names, parents and identifiers — with the member's Personal API token. Use when a member asks their agent to check, fix or backfill catalogue records. Use openheritage-source-import to create new Sources and openheritage-archives for read-only research.
 metadata:
-  version: 1.0.1
+  version: 1.1.0
 ---
 
 # OpenHeritage Catalog Review
@@ -34,7 +34,9 @@ UA="User-Agent: <agent-name>/<version> (catalog review)"
   MCP (`https://openheritage.online/mcp`) is anonymous: use it for search only.
 - Start with `GET /api/users/me/identity` to learn which account and scopes the
   token carries. Read the live operation schemas at `$BASE/api/openapi/v1.json`
-  (`x-api-required-scopes`) before the first write.
+  (`x-api-required-scopes`) before the first write. That URL redirects to the
+  current versioned copy: follow redirects (`curl -sSL`), or you read an empty
+  body.
 - A token always acts as a plain member, even when its owner is a moderator. It
   cannot approve, verify, merge, restore or match "Places to match" entries.
 - Send a descriptive `User-Agent`; a bare client may be blocked.
@@ -99,9 +101,17 @@ name below in the live OpenAPI document before trusting a filtered result.
    (`GET /api/researches?onlyMine=true`, then each `GET /api/researches/{id}`):
    places with `canonicalPlaceId`, years and surnames. Turn them into `placeId`
    with `includeDescendants=true` and `yearFrom`/`yearTo`. Sources without a
-   coverage place cannot match a place filter: reach them through the
-   repositories of the Sources you matched and a `query` for the place names.
-   With no research projects, ask the member for the archive, fund or place.
+   coverage place cannot match a place filter: reach them with a `query` for
+   the place name, in its older and inflected spellings too (Парипси, Паріпси,
+   "у Парипсах"), and through the repositories of the Sources you matched;
+   keep only ids the place filter did not return. With no research projects,
+   ask the member for the archive, fund or place.
+   - **A name query is not a place match.** It also returns other villages of
+     the same name — often in another gubernia or country — and unrelated
+     words (a surname, a word sharing the letters). Sort each hit by the area
+     the Source itself prints (повіт, gubernia, circle) and its holding
+     archive; a hit whose area is not the member's place is a different place
+     and never gets that place's link.
 2. **Priority tiers**, each `approvalStatus=Pending`, `minMissing=2` before `1`:
    1. `hasDocuments=true` — the pages are the evidence;
    2. `hasDocuments=false&hasLinks=true` — a catalogue page or scan to check;

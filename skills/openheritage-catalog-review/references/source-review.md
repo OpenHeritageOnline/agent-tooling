@@ -66,15 +66,37 @@ curl -sS -X PATCH "$BASE/api/sources/$SOURCE_ID" -H "$AUTH" -H "$UA" \
   names it (Єлисаветград, not Кропивницький; a village as the register spells
   it). The canonical place supplies the link and the point; it never replaces
   the name. Do not translate or modernise a name.
+- A location named in another catalogue's form — a FamilySearch place string
+  such as `Paripsy, Skvira, Kiev, Russian Empire` — is not the Source's
+  spelling. Rename it to the place as the case cover or the archive's own
+  title names it (`Паріпси`) and link it; keep its date windows.
 - Add `canonicalPlaceId` only when exactly one active place fits the name,
   the date and the area the Source gives (повіт, parish, gubernia). Search with
-  the Source's date (`GET /api/canonical-places?query=…&date=1870-01-01`).
+  the Source's date (`GET /api/canonical-places?query=…&date=1870-01-01`): the
+  dated `administrativePath` shows the historical повіт and волость to compare
+  with the Source.
 - Otherwise keep the name and send
   `unresolved: {area, reason: ambiguous|vanished|renamed|other, candidates, note}`
   so it joins the shared "Places to match" queue, where moderators decide.
-  `area` is the administrative context the Source prints; `candidates` are
-  place ids that fit; `note` stays empty unless it states a fact from the
-  Source (e.g. the parish), never your process.
+  `area` is the administrative context the Source prints (null when it prints
+  none); `candidates` are place ids that fit; `note` stays empty unless it
+  states a fact from the Source (e.g. the parish), never your process.
+- A same-named place in another area is not a candidate. When the only
+  canonical place of that name lies elsewhere, the location is `unresolved`
+  with `reason: other` and no candidates.
+- On read-back an unresolved location carries `unresolvedPlaceId` and
+  `unresolved: null`: the server filed it as a shared "Places to match" entry,
+  grouped by name and area. Check that entry's `area` and `reason` at
+  `GET /api/unresolved-places/{id}`.
+- **Wrong coverage is replaced, not extended.** When the case cover and the
+  holding archive's catalogue agree on a place and years and the stored
+  coverage names another village or other years, the stored segment is wrong:
+  send the corrected coverage without it. Do not keep it beside the right one.
+  Drop with it a `scopeNote` that only says where metadata came from
+  ("FamilySearch DGS …: place metadata"); that is process, not content.
+- The dates an archive case's own title or catalogue line prints for its
+  documents (`1919-1919`, `28.11.1935-26.05.1936`) are its coverage dates
+  when coverage has none: `exact` `1919`, `range` `1935-11-28/1936-05-26`.
 - Never add coordinates you inferred. A point comes from the canonical place.
 - A metrical book is written in one parish church: the villages its parish
   served are coverage locations, not authors.
@@ -156,5 +178,6 @@ outside this workflow: report the missing Author.
 
 After each `PATCH`, `GET /api/sources/{id}` and check: the new `version`; every
 field you sent; every stored item of each array you sent is still there; no
-`canonicalPlaceId` was lost; `approvalStatus` (Pending after a change to an
+`canonicalPlaceId` was lost; every `unresolved` location you sent came back
+with an `unresolvedPlaceId`; `approvalStatus` (Pending after a change to an
 Approved Source); and that no field holds anything but catalogue content.
