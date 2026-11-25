@@ -69,7 +69,7 @@ curl -sS -X PATCH "$BASE/api/sources/$SOURCE_ID" -H "$AUTH" -H "$UA" \
 - A location named in another catalogue's form — a FamilySearch place string
   such as `Paripsy, Skvira, Kiev, Russian Empire` — is not the Source's
   spelling. Rename it to the place as the case cover or the archive's own
-  title names it (`Паріпси`) and link it; keep its date windows.
+  title names it and link it; keep its date windows.
 - Add `canonicalPlaceId` only when exactly one active place fits the name,
   the date and the area the Source gives (повіт, parish, gubernia). Search with
   the Source's date (`GET /api/canonical-places?query=…&date=1870-01-01`): the
