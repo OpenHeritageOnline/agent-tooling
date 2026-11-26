@@ -31,8 +31,9 @@ Places can also be searched anonymously through MCP (`search_places`,
 Only from an OpenStreetMap pick: `POST /api/canonical-places/from-osm` with
 `{"osmType": "node|way|relation", "osmId": 123}`. The server reads the element
 itself, reuses a place that already carries that OSM id, accepts settlements
-and administrative areas only, and creates it `Unverified`. Creation is rate
-limited (about 30 an hour). A place OSM does not know (a vanished village, a
+and administrative areas only, and creates it `Unverified`. Creating and saving
+places share one limit of 240 an hour per account (`429` past it; moderators are
+not limited). A place OSM does not know (a vanished village, a
 historical повіт) is not created by this workflow: keep the name on the Source
 with `unresolved` and report it.
 
