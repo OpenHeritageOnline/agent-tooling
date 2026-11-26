@@ -1,6 +1,6 @@
 {
   "name": "openheritage",
-  "description": "Public OpenHeritage MCP search and Agent Skills for genealogy and cultural-heritage research.",
+  "description": "AI-native OpenHeritage: public MCP search and Agent Skills for genealogy and cultural-heritage research.",
   "owner": {
     "name": "OpenHeritage",
     "url": "https://openheritage.online/"
@@ -9,8 +9,8 @@
     {
       "name": "agent-tooling",
       "source": "./",
-      "description": "Search Ukraine's largest public collection of memorial, grave, and archival document data, plus genealogy, photo, cemetery, and research records.",
-      "version": "3.5.0",
+      "description": "AI-native search of Ukraine's largest public collection of memorial, grave, and archival document data, plus genealogy, photo, cemetery, and research records.",
+      "version": "3.5.1",
       "author": {
         "name": "OpenHeritage",
         "url": "https://openheritage.online/"

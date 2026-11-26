@@ -1,7 +1,7 @@
 {
   "name": "agent-tooling",
-  "version": "3.5.0",
-  "description": "Search Ukraine's largest public collection of memorial, grave, and archival document data, plus genealogy, photo, cemetery, and research records.",
+  "version": "3.5.1",
+  "description": "AI-native search of Ukraine's largest public collection of memorial, grave, and archival document data, plus genealogy, photo, cemetery, and research records.",
   "author": {
     "name": "OpenHeritage",
     "url": "https://openheritage.online/"
@@ -20,8 +20,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "OpenHeritage",
-    "shortDescription": "Ukraine's largest memorial and archive collection",
-    "longDescription": "Search Ukraine's largest public collection of memorial, grave, and archival document data. Discover cemetery records and photographs, plus repositories, sources, digitized documents, page images, XML, transcriptions, and indexed entries using OpenHeritage's read-only MCP tools and focused agent skills.",
+    "shortDescription": "AI-native access to Ukraine's largest memorial and archive collection",
+    "longDescription": "OpenHeritage is AI-native: search Ukraine's largest public collection of memorial, grave, and archival document data. Discover cemetery records and photographs, plus repositories, sources, digitized documents, page images, XML, transcriptions, and indexed entries using OpenHeritage's read-only MCP tools and focused agent skills.",
     "developerName": "OpenHeritage",
     "category": "Research",
     "capabilities": [

@@ -1,6 +1,6 @@
 # OpenHeritage agent tooling
 
-Public, cross-agent integration files for [OpenHeritage](https://openheritage.online/en/agents), a collaborative genealogy and cultural-heritage platform.
+Public, cross-agent integration files for [OpenHeritage](https://openheritage.online/en/agents), an AI-native, collaborative genealogy and cultural-heritage platform built for people and AI agents alike.
 
 OpenHeritage brings together Ukraine's largest public collection of memorial, grave, and archival document data.
 
@@ -206,8 +206,8 @@ The same versioned skill documents are also published from the OpenHeritage webs
 [`server.json`](server.json) publishes the remote server as `io.github.OpenHeritageOnline/public-search` in the official MCP Registry. The GitHub Actions workflow publishes it when an `mcp-v*` tag is pushed:
 
 ```bash
-git tag mcp-v2.11.3
-git push origin mcp-v2.11.3
+git tag mcp-v2.11.4
+git push origin mcp-v2.11.4
 ```
 
 The workflow uses GitHub OIDC, so it requires no stored token or domain-verification private key. Registry versions are immutable: bump `server.json` before creating a later tag.
